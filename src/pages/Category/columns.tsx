@@ -63,11 +63,7 @@ export function buildCategoryColumns({
           <Button
             type="link"
             className="category-page__name-link"
-            onClick={() => {
-              if (row.kind === 'category' || row.kind === 'sub_category') {
-                selectNode({ kind: row.kind, id: String(row.id) })
-              }
-            }}
+            onClick={() => selectNode({ kind: row.kind, id: String(row.id) })}
           >
             {name}
           </Button>
@@ -87,10 +83,7 @@ export function buildCategoryColumns({
             className="category-page__name-link"
             onClick={() =>
               navigate('/recipe/list', {
-                state: {
-                  filterTagId: Number(row.id),
-                  filterNonce: Date.now(),
-                },
+                state: { filterTagId: Number(row.id) },
               })
             }
           >

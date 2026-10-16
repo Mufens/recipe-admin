@@ -30,9 +30,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--ant-color-text-light-solid);
     font-size: 14px;
-    background: rgba(0, 0, 0, 0.45);
+    background: var(--ant-color-bg-mask);
     opacity: 0;
     transition: opacity 0.2s;
     cursor: pointer;
@@ -43,7 +43,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: rgba(0, 0, 0, 0.45);
+    color: var(--ant-color-text-quaternary);
   }
 
   &__tip {

@@ -1,4 +1,17 @@
-import { DeleteOutlined, ImportOutlined, PlusCircleOutlined, UploadOutlined } from '@ant-design/icons'
+import QueryFilter from '@/components/QueryFilter'
+import SmartTable from '@/components/SmartTable'
+import { type SmartColumn } from '@/components/TableToolbar'
+import { useCategoryTree } from '@/hooks/useCategoryTree'
+import { useTagsStore } from '@/store/tags'
+import { difficultyColor, difficultyOptions } from '@/utils/difficulty'
+import { imageProps, resolveMediaUrl } from '@/utils/media'
+import {
+  DeleteOutlined,
+  ImportOutlined,
+  PlusCircleOutlined,
+  UploadOutlined,
+} from '@ant-design/icons'
+import { useQuery } from '@tanstack/react-query'
 import {
   Button,
   Cascader,
@@ -15,18 +28,14 @@ import {
   message,
 } from 'antd'
 import type { Dayjs } from 'dayjs'
-import { useMemo, useRef, useState, type Key } from 'react'
+import { useEffect, useMemo, useRef, useState, type Key } from 'react'
 import { useActivate } from 'react-activation'
-import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import QueryFilter from '@/components/QueryFilter'
-import SmartTable from '@/components/SmartTable'
-import { type SmartColumn } from '@/components/TableToolbar'
-import { useCategoryTree } from '@/hooks/useCategoryTree'
-import { useTagsStore } from '@/store/tags'
-import { difficultyColor, difficultyOptions } from '@/utils/difficulty'
-import { imageProps, resolveMediaUrl } from '@/utils/media'
-import { resolvePathByTagId } from '../utils/categoryPath'
+import {
+  extractLeafTagIds,
+  resolvePathByTagId,
+  type CategoryPaths,
+} from '../utils/categoryPath'
 import {
   deleteRecipes,
   exportRecipes,
@@ -35,13 +44,8 @@ import {
   type SearchMode,
 } from './api'
 import BatchImportModal from './components/BatchImportModal'
-import { type RecipeItem } from './model'
 import './index.scss'
-
-export type HomeLocationState = {
-  filterTagId?: number
-  filterNonce?: number
-}
+import { type RecipeItem } from './model'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -60,58 +64,67 @@ export default function Home() {
   const [idInput, setIdInput] = useState('')
   const [searchIds, setSearchIds] = useState('')
 
-  const [selectedCategory, setSelectedCategory] = useState<(string | number)[][]>([])
-  const [categoryInput, setCategoryInput] = useState<(string | number)[][]>([])
+  const [selectedCategory, setSelectedCategory] = useState<CategoryPaths>([])
+  const [categoryInput, setCategoryInput] = useState<CategoryPaths>([])
 
   const [searchIngredients, setSearchIngredients] = useState<number[]>([])
   const [ingredientInput, setIngredientInput] = useState<number[]>([])
   const [ingredientMode, setIngredientMode] = useState<SearchMode>('exact')
-  const [ingredientModeInput, setIngredientModeInput] = useState<SearchMode>('exact')
+  const [ingredientModeInput, setIngredientModeInput] =
+    useState<SearchMode>('exact')
   const [difficulty, setDifficulty] = useState('')
-  const [difficultyInput, setDifficultyInput] = useState<string | undefined>()
+  const [difficultyInput, setDifficultyInput] = useState('')
   const [createTimeFrom, setCreateTimeFrom] = useState('')
   const [createTimeTo, setCreateTimeTo] = useState('')
   const [createTimeRangeInput, setCreateTimeRangeInput] = useState<
-    [Dayjs, Dayjs] |     null
+    [Dayjs, Dayjs] | null
   >(null)
   const [fetchNonce, setFetchNonce] = useState(0)
 
   const { data: categoryTree = [] } = useCategoryTree()
+  const selectedTagIds = useMemo(
+    () => extractLeafTagIds(categoryTree, selectedCategory),
+    [categoryTree, selectedCategory],
+  )
   const { data: ingredientOptions = [] } = useQuery({
     queryKey: ['ingredientNames'],
     queryFn: () => fetchIngredientNames(),
     staleTime: 5 * 60 * 1000,
   })
 
-  // 分类管理「关联菜谱」跳转：带 filterTagId 进入 → 写入分类筛选
-  const locState = (location.state || {}) as HomeLocationState
-  const filterTagId = locState.filterTagId
-  const filterNonce = locState.filterNonce
-  const tagFilterPath = useMemo(() => {
-    if (filterTagId == null || !categoryTree.length) return null
-    return resolvePathByTagId(categoryTree, filterTagId)
-  }, [filterTagId, categoryTree])
-  const [appliedNonce, setAppliedNonce] = useState<number | null>(null)
-  if (
-    filterTagId != null &&
-    filterNonce != null &&
-    tagFilterPath &&
-    filterNonce !== appliedNonce
-  ) {
-    setAppliedNonce(filterNonce)
+  // 分类管理「关联菜谱」跳转：分类树就绪后回填筛选。
+  const filterTagId = (location.state as { filterTagId?: number } | null)
+    ?.filterTagId
+  const tagFilterPath = useMemo(
+    () =>
+      filterTagId == null ? null : resolvePathByTagId(categoryTree, filterTagId),
+    [categoryTree, filterTagId],
+  )
+  const appliedLocationKeyRef = useRef('')
+  useEffect(() => {
+    if (!tagFilterPath || appliedLocationKeyRef.current === location.key) return
+
+    appliedLocationKeyRef.current = location.key
     setCategoryInput([tagFilterPath])
     setSelectedCategory([tagFilterPath])
     setSelectedRowKeys([])
     setPage(1)
-  }
+  }, [location.key, tagFilterPath])
 
-  const { data: listData, isFetching: loading, refetch } = useQuery({
+  // 有 filterTagId 时，等分类树解析完毕再发起列表查询，避免空筛选的无效请求
+  const filterResolved = filterTagId == null || tagFilterPath !== null
+
+  const {
+    data: listData,
+    isFetching: loading,
+    refetch,
+  } = useQuery({
     queryKey: [
       'recipes',
       keyword,
       page,
       pageSize,
-      selectedCategory,
+      selectedTagIds,
       searchIds,
       searchIngredients,
       ingredientMode,
@@ -126,7 +139,7 @@ export default function Home() {
           keyword,
           page,
           pageSize,
-          categoryIds: selectedCategory,
+          tagIds: selectedTagIds,
           ids: searchIds,
           ingredients: searchIngredients,
           ingredientMode,
@@ -136,6 +149,7 @@ export default function Home() {
         },
         signal,
       ),
+    enabled: filterResolved,
   })
 
   const data = listData?.items ?? []
@@ -148,10 +162,8 @@ export default function Home() {
     setSearchIds(idInput)
     setSearchIngredients(ingredientInput)
     setIngredientMode(ingredientModeInput)
-    setDifficulty(difficultyInput || '')
-    setCreateTimeFrom(
-      createTimeRangeInput?.[0]?.format('YYYY-MM-DD') || '',
-    )
+    setDifficulty(difficultyInput)
+    setCreateTimeFrom(createTimeRangeInput?.[0]?.format('YYYY-MM-DD') || '')
     setCreateTimeTo(createTimeRangeInput?.[1]?.format('YYYY-MM-DD') || '')
     setPage(1)
   }
@@ -168,7 +180,7 @@ export default function Home() {
     setIngredientMode('exact')
     setIngredientModeInput('exact')
     setDifficulty('')
-    setDifficultyInput(undefined)
+    setDifficultyInput('')
     setCreateTimeFrom('')
     setCreateTimeTo('')
     setCreateTimeRangeInput(null)
@@ -194,7 +206,7 @@ export default function Home() {
       const blob = await exportRecipes({
         keyword,
         ids: selectedRowKeys.map(String).join(','),
-        categoryIds: selectedCategory,
+        tagIds: selectedTagIds,
         ingredients: searchIngredients,
         ingredientMode,
         difficulty,
@@ -208,8 +220,8 @@ export default function Home() {
       })
       a.click()
       URL.revokeObjectURL(url)
-    } catch {
-      // 错误 toast 由拦截器统一处理
+    } catch(e) {
+      console.error(e)
     } finally {
       setExporting(false)
     }
@@ -258,7 +270,10 @@ export default function Home() {
         width: 80,
         fixed: 'left',
         render: (id: number) => (
-          <Link to={`/recipe/detail?id=${id}`} style={{ textDecoration: 'none' }}>
+          <Link
+            to={`/recipe/detail?id=${id}`}
+            style={{ textDecoration: 'none' }}
+          >
             {id}
           </Link>
         ),
@@ -430,7 +445,7 @@ export default function Home() {
             }}
             allowClear
             changeOnSelect
-            placeholder="请选择"
+            placeholder="请选择分类"
           />
         </Form.Item>
         <Form.Item label="食材筛选">
@@ -476,9 +491,7 @@ export default function Home() {
             value={createTimeRangeInput}
             onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               setCreateTimeRangeInput(
-                dates && dates[0] && dates[1]
-                  ? [dates[0], dates[1]]
-                  : null,
+                dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null,
               )
             }}
             placeholder={['开始日期', '结束日期']}

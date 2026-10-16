@@ -1,3 +1,5 @@
+import type { CategoryPaths } from '../utils/categoryPath'
+
 export interface RecipeStep {
   text: string
   image?: string
@@ -15,7 +17,7 @@ export interface RecipeEditFormData {
   ingredients: RecipeIngredient[]
   steps: RecipeStep[]
   /** 多条分类路径；叶子 tag 为正整数 number，一级/二级为 string */
-  categoryPaths: (string | number)[][]
+  categoryPaths: CategoryPaths
 }
 
 export interface UpdateRecipePayload extends RecipeEditFormData {

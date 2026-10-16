@@ -3,13 +3,11 @@ import type { RecipeListResult } from './model'
 
 export type SearchMode = 'exact' | 'fuzzy'
 
-export interface RecipeListParams {
+export interface RecipeFilterParams {
   keyword: string
-  page: number
-  pageSize: number
-  /** 分类筛选路径；叶子 tag 为正整数 number */
-  categoryIds: (string | number)[][]
   ids: string
+  /** 叶子分类标签 id */
+  tagIds: number[]
   /** 标准食材 id 列表 */
   ingredients: number[]
   ingredientMode: SearchMode
@@ -20,17 +18,12 @@ export interface RecipeListParams {
   createTimeTo: string
 }
 
-export interface ExportParams {
-  keyword: string
-  ids: string
-  /** 分类筛选路径；叶子 tag 为正整数 number */
-  categoryIds: (string | number)[][]
-  ingredients: number[]
-  ingredientMode: SearchMode
-  difficulty: string
-  createTimeFrom: string
-  createTimeTo: string
+export interface RecipeListParams extends RecipeFilterParams {
+  page: number
+  pageSize: number
 }
+
+export type ExportParams = RecipeFilterParams
 
 export interface ImportResult {
   total: number
@@ -41,13 +34,18 @@ export interface ImportResult {
 }
 
 /** 获取菜谱列表 */
-export function fetchRecipeList(params: RecipeListParams, signal?: AbortSignal) {
+export function fetchRecipeList(
+  params: RecipeListParams,
+  signal?: AbortSignal,
+) {
   return request.post<RecipeListResult>('/api/detail/list', params, { signal })
 }
 
 /** 导出菜谱 Excel */
 export function exportRecipes(params: ExportParams) {
-  return request.post<Blob>('/api/detail/export', params, { responseType: 'blob' })
+  return request.post<Blob>('/api/detail/export', params, {
+    responseType: 'blob',
+  })
 }
 
 /** 下载批量导入模板 */

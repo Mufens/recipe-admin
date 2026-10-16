@@ -6,6 +6,8 @@ import type { CategoryOption } from '@/api/category'
  * SHOW_CHILD 下勾选父级会写入全部叶子路径。
  */
 export type PathValue = string | number
+export type CategoryPath = PathValue[]
+export type CategoryPaths = CategoryPath[]
 
 export interface RecipeTagView {
   id: number
@@ -17,7 +19,9 @@ function isTagId(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0
 }
 
-function isLeafCategoryPath(path: PathValue[] | null | undefined): boolean {
+function isLeafCategoryPath(
+  path: CategoryPath | null | undefined,
+): path is CategoryPath {
   if (!Array.isArray(path) || !path.length) return false
   return isTagId(path[path.length - 1])
 }
@@ -29,8 +33,8 @@ function isLeafCategoryPath(path: PathValue[] | null | undefined): boolean {
 export function resolvePathByTagId(
   tree: CategoryOption[],
   tagId: number,
-): PathValue[] {
-  if (!isTagId(tagId)) return []
+): CategoryPath | null {
+  if (!isTagId(tagId)) return null
 
   for (const cat of tree) {
     for (const mid of cat.children || []) {
@@ -45,14 +49,62 @@ export function resolvePathByTagId(
       }
     }
   }
-  return [tagId]
+  return null
 }
+
 export function resolveCategoryPaths(
   tree: CategoryOption[],
   tags: RecipeTagView[] | null | undefined,
-): PathValue[][] {
+): CategoryPaths {
   return (tags ?? [])
     .filter((t) => isTagId(t.id))
     .map((t) => resolvePathByTagId(tree, t.id))
     .filter((p) => isLeafCategoryPath(p))
+}
+
+function findCategoryNode(
+  tree: CategoryOption[],
+  path: CategoryPath,
+): CategoryOption | null {
+  let nodes = tree
+  let node: CategoryOption | undefined
+
+  for (const value of path) {
+    node = nodes.find((item) => item.value === value)
+    if (!node) return null
+    nodes = node.children ?? []
+  }
+
+  return node ?? null
+}
+
+function collectLeafTagIds(node: CategoryOption, tagIds: Set<number>) {
+  const children = node.children ?? []
+  if (!children.length) {
+    if (isTagId(node.value)) tagIds.add(node.value)
+    return
+  }
+
+  children.forEach((child) => collectLeafTagIds(child, tagIds))
+}
+
+/** 将 Cascader 选中的父级或叶子路径展开为去重后的叶子标签 id。 */
+export function extractLeafTagIds(
+  tree: CategoryOption[],
+  paths: CategoryPaths,
+): number[] {
+  const tagIds = new Set<number>()
+
+  for (const path of paths) {
+    const node = findCategoryNode(tree, path)
+    if (node) {
+      collectLeafTagIds(node, tagIds)
+      continue
+    }
+
+    const tagId = path[path.length - 1]
+    if (isTagId(tagId)) tagIds.add(tagId)
+  }
+
+  return [...tagIds]
 }

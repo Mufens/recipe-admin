@@ -4,7 +4,6 @@ import {
   keepPreviousData,
   useMutation,
   useQuery,
-  useQueryClient,
 } from '@tanstack/react-query'
 import {
   createSubCategory,
@@ -70,7 +69,6 @@ const SAVE_MSG: Record<NonNullable<ModalMode>['type'], string> = {
 }
 
 export function useCategoryManage() {
-  const queryClient = useQueryClient()
   const [selected, setSelected] = useState<NodeSel>({ kind: '', id: '' })
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState('')
@@ -110,7 +108,7 @@ export function useCategoryManage() {
     pageSize,
   }
 
-  const { data: listData, isFetching: listLoading } = useQuery({
+  const { data: listData, isFetching: listLoading, refetch: refetchList } = useQuery({
     queryKey: ['categoryManageList', listParams],
     queryFn: ({ signal }) => fetchManageList(listParams, signal),
     placeholderData: keepPreviousData,
@@ -123,12 +121,10 @@ export function useCategoryManage() {
   const canAddTag = listData?.canAddTag ?? false
   const breadcrumb = buildBreadcrumb(nav, selected)
 
-  const refresh = (nav?: boolean) =>
-    Promise.all([
-      nav && queryClient.invalidateQueries({ queryKey: ['categoryManageNav'] }),
-      queryClient.invalidateQueries({ queryKey: ['categoryManageList'] }),
-      queryClient.invalidateQueries({ queryKey: ['categoryTree'] }),
-    ])
+  const refresh = (refreshNav?: boolean) => {
+    if (refreshNav) refetchNav()
+    refetchList()
+  }
 
   const saveMut = useMutation({
     mutationFn: async ({

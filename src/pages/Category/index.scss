@@ -92,7 +92,7 @@
   }
 
   &__search-label {
-    color: rgba(0, 0, 0, 0.88);
+    color: var(--ant-color-text);
     font-size: 14px;
     white-space: nowrap;
   }

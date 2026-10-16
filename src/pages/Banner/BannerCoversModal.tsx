@@ -1,8 +1,8 @@
+import { fetchRecipeList } from '@/pages/Home/list/api'
+import { imageProps, resolveMediaUrl } from '@/utils/media'
+import { useQuery } from '@tanstack/react-query'
 import { Image, Input, Modal, Spin } from 'antd'
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { imageProps, resolveMediaUrl } from '@/utils/media'
-import { fetchRecipeList } from '@/pages/Home/list/api'
 import type { BannerCover, BannerItem } from './model'
 
 type Slot = BannerCover | null
@@ -30,9 +30,7 @@ function firstEmpty(slots: Slot[]) {
 /** row 变化时用 key 重挂载，避免在 effect 里 setState */
 export default function BannerCoversModal({ row, ...rest }: Props) {
   if (!row) {
-    return (
-      <Modal open={false} onCancel={rest.onCancel} destroyOnHidden />
-    )
+    return <Modal open={false} onCancel={rest.onCancel} destroyOnHidden />
   }
   return <BannerCoversEditor key={row.id} row={row} {...rest} />
 }
@@ -56,7 +54,7 @@ function BannerCoversEditor({
           keyword,
           page: 1,
           pageSize: 18,
-          categoryIds: [],
+          tagIds: [],
           ids: '',
           ingredients: [],
           ingredientMode: 'exact',
