@@ -13,6 +13,7 @@ export interface RouteMeta {
 
 /** 路由 path → 页面元信息 */
 export const routeMetaMap: Record<string, RouteMeta> = {
+  '/dashboard': { title: '数据看板' },
   '/recipe/list': { title: '菜谱列表', parent: '菜谱管理' },
   '/categories': { title: '分类管理', parent: '菜谱管理' },
   '/banners': { title: '首页轮播', parent: '菜谱管理' },

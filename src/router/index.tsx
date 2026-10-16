@@ -3,6 +3,7 @@ import { Spin } from 'antd'
 import { Navigate, useRoutes, useSearchParams } from 'react-router-dom'
 import BasicLayout from '@/layouts/BasicLayout'
 import Access from '@/pages/Access'
+import DashboardPage from '@/pages/Dashboard'
 import Add from '@/pages/Home/add'
 import Detail from '@/pages/Home/detail'
 import Edit from '@/pages/Home/edit'
@@ -12,6 +13,16 @@ import BannerPage from '@/pages/Banner'
 import UserList from '@/pages/User/list'
 import AiFeedbackPage from '@/pages/AiFeedback'
 import TableDemo from '@/pages/Table'
+
+function KeepAliveDashboard() {
+  return (
+    <div style={{ height: '100%' }}>
+      <KeepAlive name="/dashboard">
+        <DashboardPage />
+      </KeepAlive>
+    </div>
+  )
+}
 
 function KeepAliveRecipeList() {
   return (
@@ -106,7 +117,8 @@ export default function AppRouter() {
       path: '/',
       element: <BasicLayout />,
       children: [
-        { index: true, element: <Navigate to="/recipe/list" replace /> },
+        { index: true, element: <Navigate to="/dashboard" replace /> },
+        { path: 'dashboard', element: <KeepAliveDashboard /> },
         { path: 'recipe/list', element: <KeepAliveRecipeList /> },
         { path: 'recipe/detail', element: <KeepAliveDetail /> },
         { path: 'recipe/edit', element: <EditPage /> },

@@ -1,5 +1,6 @@
 import {
   AppstoreOutlined,
+  DashboardOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PictureOutlined,
@@ -23,6 +24,11 @@ import './index.scss'
 const { Header, Sider, Content } = Layout
 
 const menuItems = [
+  {
+    key: '/dashboard',
+    icon: <DashboardOutlined />,
+    label: '数据看板',
+  },
   {
     key: '/recipe/list',
     icon: <UnorderedListOutlined />,
