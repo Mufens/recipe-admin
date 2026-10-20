@@ -1,14 +1,19 @@
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
+  BookOutlined,
   DislikeOutlined,
   FireOutlined,
   RobotOutlined,
+  StarOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import { Card, Col, Row, Space, Table, Tag, Typography } from 'antd'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AiTrendChart from './AiTrendChart'
+import BoardStickers from './BoardStickers'
+import HeroDecor from './HeroDecor'
 import {
   DEMO_AI_TREND,
   DEMO_HOT_RECIPES,
@@ -16,14 +21,81 @@ import {
   DEMO_STATS,
   type HotRecipeRow,
   type RecentFeedbackRow,
+  type StatIconKey,
 } from './model'
 import './index.scss'
 
 const { Title, Text, Paragraph } = Typography
 
-function formatNumber(n: number) {
-  if (Number.isInteger(n)) return n.toLocaleString('zh-CN')
-  return n.toLocaleString('zh-CN', { maximumFractionDigits: 1 })
+const STAT_ICONS: Record<StatIconKey, ReactNode> = {
+  recipes: <BookOutlined />,
+  users: <TeamOutlined />,
+  stars: <StarOutlined />,
+  cooked: <FireOutlined />,
+  aiAsk: <RobotOutlined />,
+  aiDislike: <DislikeOutlined />,
+}
+
+function formatNumber(n: number, decimals = 0) {
+  return n.toLocaleString('zh-CN', {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  })
+}
+
+function useCountUp(target: number, duration = 900) {
+  const [value, setValue] = useState(0)
+
+  useEffect(() => {
+    let raf = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      const eased = 1 - (1 - t) ** 3
+      setValue(target * eased)
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+
+  return value
+}
+
+function StatValue({
+  value,
+  suffix,
+  decimals = 0,
+}: {
+  value: number
+  suffix?: string
+  decimals?: number
+}) {
+  const current = useCountUp(value)
+  return (
+    <div className="dashboard-page__stat-value">
+      {formatNumber(current, decimals)}
+      {suffix ? (
+        <span className="dashboard-page__stat-suffix">{suffix}</span>
+      ) : null}
+    </div>
+  )
+}
+
+function SectionLabel({
+  index,
+  children,
+}: {
+  index: string
+  children: ReactNode
+}) {
+  return (
+    <div className="dashboard-page__section-label">
+      <span className="dashboard-page__section-index">{index}</span>
+      <span className="dashboard-page__section-title">{children}</span>
+      <span className="dashboard-page__section-line" />
+    </div>
+  )
 }
 
 export default function DashboardPage() {
@@ -86,82 +158,111 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-page__head">
-        <div>
-          <Title level={4} className="dashboard-page__title">
-            数据看板
-          </Title>
-          <Paragraph type="secondary" className="dashboard-page__desc">
-            Demo 展示页，数据为示意，未接真实接口。用于预览运营首页形态。
-          </Paragraph>
+      <div className="dashboard-page__board">
+        <BoardStickers />
+
+        <div className="dashboard-page__head">
+          <div className="dashboard-page__tape dashboard-page__tape--l" />
+          <div className="dashboard-page__tape dashboard-page__tape--r" />
+          <div className="dashboard-page__head-text">
+            <div className="dashboard-page__badge-row">
+              <Tag color="processing">Demo</Tag>
+              <span className="dashboard-page__hand-tag">厨房手抄报</span>
+            </div>
+            <Title level={3} className="dashboard-page__title">
+              今日厨房情报
+            </Title>
+            <Paragraph type="secondary" className="dashboard-page__desc">
+              看一眼谁在火、谁在问、谁被收藏——数据是示意，版面先像一张好看的黑板报。
+            </Paragraph>
+          </div>
+          <div className="dashboard-page__hero">
+            <HeroDecor />
+          </div>
         </div>
-        <Tag color="processing">Demo</Tag>
-      </div>
 
-      <Row gutter={[16, 16]}>
-        {DEMO_STATS.map((item) => (
-          <Col key={item.key} xs={24} sm={12} lg={8} xl={4}>
-            <Card size="small" className="dashboard-page__stat">
-              <Text type="secondary">{item.title}</Text>
-              <div className="dashboard-page__stat-value">
-                {formatNumber(item.value)}
-                {item.suffix ? (
-                  <span className="dashboard-page__stat-suffix">{item.suffix}</span>
-                ) : null}
-              </div>
-              <Space size={4} className="dashboard-page__stat-delta">
-                {item.trend === 'up' ? (
-                  <ArrowUpOutlined className="is-up" />
-                ) : item.trend === 'down' ? (
-                  <ArrowDownOutlined className="is-down" />
-                ) : null}
-                <Text type="secondary">{item.delta}</Text>
-              </Space>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+        <section className="dashboard-page__section">
+          <SectionLabel index="01">本周速览</SectionLabel>
+          <Row gutter={[14, 14]}>
+            {DEMO_STATS.map((item, index) => (
+              <Col key={item.key} xs={24} sm={12} lg={8} xl={4}>
+                <Card
+                  size="small"
+                  className={`dashboard-page__stat is-tone-${(index % 3) + 1}`}
+                  style={{ animationDelay: `${index * 60}ms` }}
+                >
+                  <div className="dashboard-page__stat-top">
+                    <Text type="secondary">{item.title}</Text>
+                    <span className="dashboard-page__stat-icon">
+                      {STAT_ICONS[item.key]}
+                    </span>
+                  </div>
+                  <StatValue
+                    value={item.value}
+                    suffix={item.suffix}
+                    decimals={item.decimals}
+                  />
+                  <Space size={4} className="dashboard-page__stat-delta">
+                    {item.trend === 'up' ? (
+                      <ArrowUpOutlined className="is-up" />
+                    ) : item.trend === 'down' ? (
+                      <ArrowDownOutlined className="is-down" />
+                    ) : null}
+                    <Text type="secondary">{item.delta}</Text>
+                  </Space>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </section>
 
-      <Row gutter={[16, 16]} className="dashboard-page__main">
-        <Col xs={24} xl={14}>
+        <section className="dashboard-page__section">
+          <SectionLabel index="02">厨知道播报</SectionLabel>
+          <Row gutter={[14, 14]}>
+            <Col xs={24} xl={14}>
+              <Card
+                size="small"
+                className="dashboard-page__panel is-chart"
+                title={
+                  <Space>
+                    <RobotOutlined />
+                    <span>近 7 日 AI 提问趋势</span>
+                  </Space>
+                }
+                extra={<Text type="secondary">ECharts Demo</Text>}
+              >
+                <AiTrendChart data={DEMO_AI_TREND} />
+              </Card>
+            </Col>
+            <Col xs={24} xl={10}>
+              <Card
+                size="small"
+                className="dashboard-page__panel is-note"
+                title={
+                  <Space>
+                    <DislikeOutlined />
+                    <span>近期低满意问题</span>
+                  </Space>
+                }
+                extra={<Link to="/ai/feedback">查看全部</Link>}
+              >
+                <Table<RecentFeedbackRow>
+                  size="small"
+                  rowKey="key"
+                  pagination={false}
+                  columns={feedbackColumns}
+                  dataSource={DEMO_RECENT_FEEDBACK}
+                />
+              </Card>
+            </Col>
+          </Row>
+        </section>
+
+        <section className="dashboard-page__section">
+          <SectionLabel index="03">人气菜谱墙</SectionLabel>
           <Card
             size="small"
-            title={
-              <Space>
-                <RobotOutlined />
-                <span>近 7 日 AI 提问趋势</span>
-              </Space>
-            }
-            extra={<Text type="secondary">ECharts Demo</Text>}
-          >
-            <AiTrendChart data={DEMO_AI_TREND} />
-          </Card>
-        </Col>
-
-        <Col xs={24} xl={10}>
-          <Card
-            size="small"
-            title={
-              <Space>
-                <DislikeOutlined />
-                <span>近期低满意问题</span>
-              </Space>
-            }
-            extra={<Link to="/ai/feedback">查看全部</Link>}
-          >
-            <Table<RecentFeedbackRow>
-              size="small"
-              rowKey="key"
-              pagination={false}
-              columns={feedbackColumns}
-              dataSource={DEMO_RECENT_FEEDBACK}
-            />
-          </Card>
-        </Col>
-
-        <Col span={24}>
-          <Card
-            size="small"
+            className="dashboard-page__panel is-wall"
             title={
               <Space>
                 <FireOutlined />
@@ -178,8 +279,8 @@ export default function DashboardPage() {
               dataSource={DEMO_HOT_RECIPES}
             />
           </Card>
-        </Col>
-      </Row>
+        </section>
+      </div>
     </div>
   )
 }

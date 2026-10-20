@@ -1,10 +1,20 @@
+export type StatIconKey =
+  | 'recipes'
+  | 'users'
+  | 'stars'
+  | 'cooked'
+  | 'aiAsk'
+  | 'aiDislike'
+
 export interface DashboardStat {
-  key: string
+  key: StatIconKey
   title: string
   value: number
   suffix?: string
   delta: string
   trend: 'up' | 'down' | 'flat'
+  /** 小数位；整数不传 */
+  decimals?: number
 }
 
 export interface HotRecipeRow {
@@ -43,6 +53,7 @@ export const DEMO_STATS: DashboardStat[] = [
     suffix: '%',
     delta: '-0.6pt',
     trend: 'down',
+    decimals: 1,
   },
 ]
 
