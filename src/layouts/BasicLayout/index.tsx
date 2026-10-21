@@ -1,25 +1,32 @@
 import {
   AppstoreOutlined,
   DashboardOutlined,
+  DownOutlined,
+  GithubOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PictureOutlined,
+  PoweroffOutlined,
   TableOutlined,
   DislikeOutlined,
   TeamOutlined,
   UnorderedListOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Breadcrumb, Button, Layout, Menu, theme } from 'antd'
-import { useMemo, useState, type ReactNode } from 'react'
+import { Avatar, Breadcrumb, Button, Dropdown, Layout, Menu, theme } from 'antd'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import DarkModeToggle from '@/theme/DarkModeToggle'
 import ThemeSwitcher from '@/theme/ThemeSwitcher'
 import TagsView from '@/layouts/TagsView'
 import { routeMetaMap } from '@/router/routes'
 import { useThemeStore } from '@/store/theme'
+import { fetchAdminProfile } from '@/pages/Login/api'
+import { clearToken, getAdmin, setAdmin } from '@/utils/auth'
 import logo from '@/assets/logo.svg'
 import './index.scss'
+
+const DEFAULT_AVATAR = 'https://images.ishidao.xin/cat/avatar.jpg'
 
 const { Header, Sider, Content } = Layout
 
@@ -75,6 +82,23 @@ export default function BasicLayout() {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken()
   const menuTheme = isDark ? 'dark' : 'light'
+
+  const [admin, setAdminState] = useState(getAdmin)
+  const displayName = admin?.name || admin?.username || 'admin'
+
+  useEffect(() => {
+    let cancelled = false
+    fetchAdminProfile()
+      .then((data) => {
+        if (cancelled) return
+        setAdmin(data)
+        setAdminState(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const selectedKeys = useMemo(
     () => [routeMetaMap[location.pathname]?.active ?? location.pathname],
@@ -153,6 +177,36 @@ export default function BasicLayout() {
           <div className="basic-layout__header-actions">
             <DarkModeToggle />
             <ThemeSwitcher />
+            <Dropdown
+              rootClassName="basic-layout-user-dropdown"
+              menu={{
+                items: [
+                  {
+                    key: 'github',
+                    icon: <GithubOutlined className="basic-layout__menu-icon" />,
+                    label: 'github仓库',
+                  },
+                  {
+                    key: 'logout',
+                    icon: (
+                      <PoweroffOutlined className="basic-layout__menu-icon basic-layout__menu-icon--logout" />
+                    ),
+                    label: '退出登录',
+                  },
+                ],
+                onClick: ({ key }) => {
+                  if (key !== 'logout') return
+                  clearToken()
+                  window.location.assign('/login')
+                },
+              }}
+            >
+              <span className="basic-layout__user" role="button" tabIndex={0}>
+                <Avatar size={36} src={admin?.avatar || DEFAULT_AVATAR} />
+                <span className="basic-layout__user-name">{displayName}</span>
+                <DownOutlined className="basic-layout__user-caret" />
+              </span>
+            </Dropdown>
           </div>
         </Header>
         <TagsView />

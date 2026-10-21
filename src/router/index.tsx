@@ -1,6 +1,6 @@
 import { KeepAlive } from 'react-activation'
 import { Spin } from 'antd'
-import { Navigate, useRoutes, useSearchParams } from 'react-router-dom'
+import { Navigate, Outlet, useRoutes, useSearchParams } from 'react-router-dom'
 import BasicLayout from '@/layouts/BasicLayout'
 import Access from '@/pages/Access'
 import DashboardPage from '@/pages/Dashboard'
@@ -12,6 +12,9 @@ import CategoryPage from '@/pages/Category'
 import BannerPage from '@/pages/Banner'
 import UserList from '@/pages/User/list'
 import AiFeedbackPage from '@/pages/AiFeedback'
+import LoginCallback from '@/pages/Login/callback'
+import LoginPage from '@/pages/Login'
+import { getToken } from '@/utils/auth'
 import TableDemo from '@/pages/Table'
 
 function KeepAliveDashboard() {
@@ -111,26 +114,38 @@ function KeepAliveAdd() {
   )
 }
 
+function RequireAuth() {
+  if (!getToken()) return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
 export default function AppRouter() {
   return useRoutes([
+    { path: '/login', element: <LoginPage /> },
+    { path: '/login/callback', element: <LoginCallback /> },
     {
       path: '/',
-      element: <BasicLayout />,
+      element: <RequireAuth />,
       children: [
-        { index: true, element: <Navigate to="/dashboard" replace /> },
-        { path: 'dashboard', element: <KeepAliveDashboard /> },
-        { path: 'recipe/list', element: <KeepAliveRecipeList /> },
-        { path: 'recipe/detail', element: <KeepAliveDetail /> },
-        { path: 'recipe/edit', element: <EditPage /> },
-        { path: 'recipe/add', element: <KeepAliveAdd /> },
-        { path: 'categories', element: <KeepAliveCategories /> },
-        { path: 'banners', element: <KeepAliveBanners /> },
-        { path: 'users', element: <KeepAliveUsers /> },
-        { path: 'ai/feedback', element: <KeepAliveAiFeedback /> },
-        { path: 'access', element: <Access /> },
-        { path: 'table', element: <TableDemo /> },
+        {
+          element: <BasicLayout />,
+          children: [
+            { index: true, element: <Navigate to="/dashboard" replace /> },
+            { path: 'dashboard', element: <KeepAliveDashboard /> },
+            { path: 'recipe/list', element: <KeepAliveRecipeList /> },
+            { path: 'recipe/detail', element: <KeepAliveDetail /> },
+            { path: 'recipe/edit', element: <EditPage /> },
+            { path: 'recipe/add', element: <KeepAliveAdd /> },
+            { path: 'categories', element: <KeepAliveCategories /> },
+            { path: 'banners', element: <KeepAliveBanners /> },
+            { path: 'users', element: <KeepAliveUsers /> },
+            { path: 'ai/feedback', element: <KeepAliveAiFeedback /> },
+            { path: 'access', element: <Access /> },
+            { path: 'table', element: <TableDemo /> },
+            { path: '*', element: <Navigate to="/recipe/list" replace /> },
+          ],
+        },
       ],
     },
-    { path: '*', element: <Navigate to="/recipe/list" replace /> },
   ])
 }

@@ -1,5 +1,6 @@
 import { message } from 'antd'
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
+import { clearToken, getToken } from '@/utils/auth'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -18,6 +19,12 @@ const instance: AxiosInstance = axios.create({
   timeout: 10000,
 })
 
+instance.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
     const { data } = response
@@ -28,6 +35,13 @@ instance.interceptors.response.use(
     return Promise.reject(data)
   },
   (error) => {
+    if (error.response?.status === 401) {
+      clearToken()
+      const path = window.location.pathname
+      if (path === '/login/callback' || !path.startsWith('/login')) {
+        window.location.assign('/login')
+      }
+    }
     // 取消 / 关闭 toast 时不提示
     if (!axios.isCancel(error) && error?.config?.errToast !== false) {
       message.error(
