@@ -5,12 +5,6 @@ import { useCategoryTree } from '@/hooks/useCategoryTree'
 import { useTagsStore } from '@/store/tags'
 import { difficultyColor, difficultyOptions } from '@/utils/difficulty'
 import { imageProps, resolveMediaUrl } from '@/utils/media'
-import {
-  DeleteOutlined,
-  ImportOutlined,
-  PlusCircleOutlined,
-  UploadOutlined,
-} from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import {
   Button,

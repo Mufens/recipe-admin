@@ -93,6 +93,15 @@
       background: var(--ant-color-primary);
       border-color: var(--ant-color-primary);
       color: var(--ant-color-text-light-solid);
+
+      .ant-tag-close-icon {
+        color: var(--ant-color-text-light-solid);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.24);
+          color: var(--ant-color-text-light-solid);
+        }
+      }
     }
   }
 }

@@ -70,9 +70,9 @@ function buildOption(
   colorPrimary: string,
   colorSecondary: string,
 ) {
-  const axisColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)'
-  const splitColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-  const textColor = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)'
+  const axisColor = isDark ? 'rgba(243,237,228,0.45)' : '#A2987F'
+  const splitColor = isDark ? 'rgba(243,237,228,0.08)' : '#E9DFCC'
+  const textColor = isDark ? 'rgba(243,237,228,0.85)' : '#6E6355'
   const barLight = mixWithWhite(colorPrimary, 0.35)
 
   return {
@@ -171,7 +171,6 @@ export default function AiTrendChart({ data }: AiTrendChartProps) {
     )
   }, [data, isDark, colorPrimary, colorSecondary])
 
-  // 容器生命周期：宽高就绪后再 init（见官方「图表容器及大小」）
   useEffect(() => {
     const el = hostRef.current
     if (!el) return

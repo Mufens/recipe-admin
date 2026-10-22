@@ -1,4 +1,3 @@
-import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import './index.scss'
 

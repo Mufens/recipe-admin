@@ -1,9 +1,3 @@
-import {
-  DislikeFilled,
-  DislikeOutlined,
-  LikeFilled,
-  LikeOutlined,
-} from '@ant-design/icons'
 import { Form, Input, Pagination, Select, Space, Button } from 'antd'
 import dayjs from 'dayjs'
 import { useMemo, useRef, useState } from 'react'

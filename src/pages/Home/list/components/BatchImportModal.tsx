@@ -1,4 +1,3 @@
-import { CloudUploadOutlined, DownloadOutlined } from '@ant-design/icons'
 import { Button, Modal, Upload, message } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useState } from 'react'

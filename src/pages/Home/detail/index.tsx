@@ -1,11 +1,4 @@
 import {
-  ClockCircleOutlined,
-  FireOutlined,
-  StarOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
-import {
   Avatar,
   Button,
   Card,

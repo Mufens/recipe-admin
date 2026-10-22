@@ -38,6 +38,7 @@ import './index.scss'
 interface DraggableTagProps {
   tag: TagItem
   active: boolean
+  closable: boolean
   activeKey: string
   onNavigate: (path: string) => void
   onDrop: (path: string) => void
@@ -46,6 +47,7 @@ interface DraggableTagProps {
 const DraggableTag = memo(function DraggableTag({
   tag,
   active,
+  closable,
   activeKey,
   onNavigate,
   onDrop,
@@ -107,7 +109,7 @@ const DraggableTag = memo(function DraggableTag({
       >
         <Tag
           className={`tags-view__item${active ? ' tags-view__item--active' : ''}`}
-          closable={!active}
+          closable={closable}
           onClose={handleClose}
           onClick={handleTagClick}
         >
@@ -178,6 +180,7 @@ export default function TagsView() {
                 key={tag.path}
                 tag={tag}
                 active={tag.path === activeKey}
+                closable={tags.length > 1}
                 activeKey={activeKey}
                 onNavigate={onNavigate}
                 onDrop={onDrop}

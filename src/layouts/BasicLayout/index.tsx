@@ -1,26 +1,10 @@
-import {
-  AppstoreOutlined,
-  DashboardOutlined,
-  DownOutlined,
-  GithubOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  PictureOutlined,
-  PoweroffOutlined,
-  TableOutlined,
-  DislikeOutlined,
-  TeamOutlined,
-  UnorderedListOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
-import { Avatar, Breadcrumb, Button, Dropdown, Layout, Menu, theme } from 'antd'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Avatar, Button, Dropdown, Layout, Menu } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import DarkModeToggle from '@/theme/DarkModeToggle'
 import ThemeSwitcher from '@/theme/ThemeSwitcher'
 import TagsView from '@/layouts/TagsView'
 import { routeMetaMap } from '@/router/routes'
-import { useThemeStore } from '@/store/theme'
 import { fetchAdminProfile } from '@/pages/Login/api'
 import { clearToken, getAdmin, setAdmin } from '@/utils/auth'
 import logo from '@/assets/logo.svg'
@@ -77,11 +61,6 @@ export default function BasicLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const isDark = useThemeStore((s) => s.isDark)
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken()
-  const menuTheme = isDark ? 'dark' : 'light'
 
   const [admin, setAdminState] = useState(getAdmin)
   const displayName = admin?.name || admin?.username || 'admin'
@@ -105,41 +84,10 @@ export default function BasicLayout() {
     [location.pathname],
   )
 
-  const breadcrumbItems = useMemo(() => {
-    const meta = routeMetaMap[location.pathname]
-    if (!meta) {
-      return [{ title: '菜谱管理' }]
-    }
-
-    const items: { title: ReactNode }[] = []
-    if (meta.parent) {
-      const parentPath =
-        meta.parent === '菜谱列表'
-          ? '/recipe/list'
-          : meta.parent === '系统管理'
-            ? '/users'
-            : '/recipe/list'
-      items.push({
-        title: <Link to={parentPath}>{meta.parent}</Link>,
-      })
-    }
-
-    if (location.pathname === '/recipe/detail') {
-      const id = new URLSearchParams(location.search).get('id')
-      items.push({ title: id ? `菜谱详情 ${id}` : meta.title })
-    } else if (location.pathname === '/recipe/edit') {
-      const id = new URLSearchParams(location.search).get('id')
-      items.push({ title: id ? `编辑菜谱 ${id}` : meta.title })
-    } else {
-      items.push({ title: meta.title })
-    }
-    return items
-  }, [location.pathname, location.search])
-
   return (
     <Layout className="basic-layout">
       <Sider
-        theme={menuTheme}
+        theme="light"
         trigger={null}
         collapsible
         collapsed={collapsed}
@@ -152,7 +100,6 @@ export default function BasicLayout() {
           )}
         </div>
         <Menu
-          theme={menuTheme}
           mode="inline"
           selectedKeys={selectedKeys}
           items={menuItems}
@@ -160,19 +107,12 @@ export default function BasicLayout() {
         />
       </Sider>
       <Layout>
-        <Header
-          className="basic-layout__header"
-          style={{ background: colorBgContainer }}
-        >
+        <Header className="basic-layout__header">
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed((v) => !v)}
             className="basic-layout__trigger"
-          />
-          <Breadcrumb
-            className="basic-layout__breadcrumb"
-            items={breadcrumbItems}
           />
           <div className="basic-layout__header-actions">
             <DarkModeToggle />
@@ -210,13 +150,7 @@ export default function BasicLayout() {
           </div>
         </Header>
         <TagsView />
-        <Content
-          className="basic-layout__content"
-          style={{
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
+        <Content className="basic-layout__content">
           <Outlet />
         </Content>
       </Layout>

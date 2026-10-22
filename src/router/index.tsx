@@ -14,6 +14,7 @@ import UserList from '@/pages/User/list'
 import AiFeedbackPage from '@/pages/AiFeedback'
 import LoginCallback from '@/pages/Login/callback'
 import LoginPage from '@/pages/Login'
+import NotFoundPage from '@/pages/NotFound'
 import { getToken } from '@/utils/auth'
 import TableDemo from '@/pages/Table'
 
@@ -142,7 +143,7 @@ export default function AppRouter() {
             { path: 'ai/feedback', element: <KeepAliveAiFeedback /> },
             { path: 'access', element: <Access /> },
             { path: 'table', element: <TableDemo /> },
-            { path: '*', element: <Navigate to="/recipe/list" replace /> },
+            { path: '*', element: <NotFoundPage /> },
           ],
         },
       ],

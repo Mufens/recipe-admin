@@ -1,4 +1,3 @@
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Form, Input, Row, Switch, Tooltip } from 'antd'
 
 export interface RecipeIngredient {

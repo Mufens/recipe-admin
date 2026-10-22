@@ -1,31 +1,18 @@
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  BookOutlined,
-  DislikeOutlined,
-  FireOutlined,
-  RobotOutlined,
-  StarOutlined,
-  TeamOutlined,
-} from '@ant-design/icons'
-import { Card, Col, Row, Space, Table, Tag, Typography } from 'antd'
+import { useQuery } from '@tanstack/react-query'
+import { Card, Col, Row, Space, Spin, Table, Tag, Typography } from 'antd'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { getAdmin } from '@/utils/auth'
 import AiTrendChart from './AiTrendChart'
-import BoardStickers from './BoardStickers'
-import HeroDecor from './HeroDecor'
+import { fetchOverview } from './api'
 import {
-  DEMO_AI_TREND,
-  DEMO_HOT_RECIPES,
-  DEMO_RECENT_FEEDBACK,
-  DEMO_STATS,
   type HotRecipeRow,
   type RecentFeedbackRow,
   type StatIconKey,
 } from './model'
 import './index.scss'
 
-const { Title, Text, Paragraph } = Typography
+const { Text } = Typography
 
 const STAT_ICONS: Record<StatIconKey, ReactNode> = {
   recipes: <BookOutlined />,
@@ -43,14 +30,15 @@ function formatNumber(n: number, decimals = 0) {
   })
 }
 
-function useCountUp(target: number, duration = 900) {
+function useCountUp(target: number, duration = 700) {
   const [value, setValue] = useState(0)
 
   useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let raf = 0
     const start = performance.now()
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration)
+      const t = reduced ? 1 : Math.min(1, (now - start) / duration)
       const eased = 1 - (1 - t) ** 3
       setValue(target * eased)
       if (t < 1) raf = requestAnimationFrame(tick)
@@ -82,31 +70,42 @@ function StatValue({
   )
 }
 
-function SectionLabel({
-  index,
-  children,
-}: {
-  index: string
-  children: ReactNode
-}) {
-  return (
-    <div className="dashboard-page__section-label">
-      <span className="dashboard-page__section-index">{index}</span>
-      <span className="dashboard-page__section-title">{children}</span>
-      <span className="dashboard-page__section-line" />
-    </div>
-  )
+function greetLabel() {
+  const hour = new Date().getHours()
+  if (hour < 12) return '早上好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
 }
 
 export default function DashboardPage() {
+  const admin = getAdmin()
+  const adminName = admin?.name || admin?.username || '管理员'
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: ({ signal }) => fetchOverview(signal),
+  })
+  const stats = data?.stats ?? []
+  const aiTrend = data?.aiTrend ?? []
+  const hotRecipes = data?.hotRecipes ?? []
+  const recentFeedback = data?.recentFeedback ?? []
+
   const hotColumns = useMemo(
     () => [
       {
         title: '排名',
         dataIndex: 'rank',
-        width: 64,
-        render: (rank: number) =>
-          rank <= 3 ? <Tag color="orange">{rank}</Tag> : rank,
+        width: 72,
+        render: (rank: number) => (
+          <span
+            className={
+              rank <= 3
+                ? 'dashboard-page__rank is-top'
+                : 'dashboard-page__rank'
+            }
+          >
+            {String(rank).padStart(2, '0')}
+          </span>
+        ),
       },
       {
         title: '菜谱',
@@ -116,18 +115,21 @@ export default function DashboardPage() {
       {
         title: '分类',
         dataIndex: 'category',
-        width: 96,
+        width: 120,
+        ellipsis: true,
       },
       {
         title: '收藏',
         dataIndex: 'star',
-        width: 88,
+        width: 96,
+        align: 'right' as const,
         render: (v: number) => formatNumber(v),
       },
       {
         title: '做过',
         dataIndex: 'cooked',
         width: 88,
+        align: 'right' as const,
         render: (v: number) => formatNumber(v),
       },
     ],
@@ -158,42 +160,73 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-page__board">
-        <BoardStickers />
-
-        <div className="dashboard-page__head">
-          <div className="dashboard-page__tape dashboard-page__tape--l" />
-          <div className="dashboard-page__tape dashboard-page__tape--r" />
-          <div className="dashboard-page__head-text">
-            <div className="dashboard-page__badge-row">
-              <Tag color="processing">Demo</Tag>
-              <span className="dashboard-page__hand-tag">厨房手抄报</span>
-            </div>
-            <Title level={3} className="dashboard-page__title">
-              今日厨房情报
-            </Title>
-            <Paragraph type="secondary" className="dashboard-page__desc">
-              看一眼谁在火、谁在问、谁被收藏——数据是示意，版面先像一张好看的黑板报。
-            </Paragraph>
+      <header className="dashboard-page__hello">
+        <div>
+          <div className="dashboard-page__hello-title">
+            {greetLabel()}，{adminName}
+            <span className="dashboard-page__wave" aria-hidden>
+              👋
+            </span>
           </div>
-          <div className="dashboard-page__hero">
-            <HeroDecor />
-          </div>
+          <Text type="secondary" className="dashboard-page__hello-desc">
+          烟火藏美味，为您呈现菜谱系统实时数据。
+          </Text>
         </div>
-
+        <span className="dashboard-page__hero" aria-hidden>
+          <svg className="dashboard-page__hero-svg" viewBox="0 0 120 96" width="108" height="86">
+            <ellipse cx="52" cy="78" rx="36" ry="6" className="is-shadow" />
+            <path
+              className="is-stroke"
+              d="M18 58h68a8 8 0 0 1 8 8v2H10v-2a8 8 0 0 1 8-8z"
+              fill="none"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path className="is-fill" d="M22 58c2-14 12-24 30-24s28 10 30 24H22z" opacity="0.35" />
+            <path
+              className="is-stroke"
+              d="M86 62h22c4 0 7 3 7 7s-3 7-7 7h-8"
+              fill="none"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+            />
+            <path
+              className="is-steam s1"
+              d="M40 28c0-6 4-8 4-14"
+              fill="none"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <path
+              className="is-steam s2"
+              d="M52 24c0-7 4-9 4-16"
+              fill="none"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <path
+              className="is-steam s3"
+              d="M64 28c0-6 4-8 4-14"
+              fill="none"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <circle className="is-fill" cx="44" cy="48" r="3.5" />
+            <circle className="is-fill" cx="58" cy="44" r="2.5" />
+            <circle className="is-fill" cx="68" cy="50" r="3" />
+          </svg>
+        </span>
+      </header>
+      <Spin spinning={isLoading}>
         <section className="dashboard-page__section">
-          <SectionLabel index="01">本周速览</SectionLabel>
-          <Row gutter={[14, 14]}>
-            {DEMO_STATS.map((item, index) => (
+          <Row gutter={[16, 16]}>
+            {stats.map((item) => (
               <Col key={item.key} xs={24} sm={12} lg={8} xl={4}>
-                <Card
-                  size="small"
-                  className={`dashboard-page__stat is-tone-${(index % 3) + 1}`}
-                  style={{ animationDelay: `${index * 60}ms` }}
-                >
+                <Card size="small" className="dashboard-page__stat" variant="borderless">
                   <div className="dashboard-page__stat-top">
                     <Text type="secondary">{item.title}</Text>
-                    <span className="dashboard-page__stat-icon">
+                    <span className={`dashboard-page__stat-icon is-${item.key}`}>
                       {STAT_ICONS[item.key]}
                     </span>
                   </div>
@@ -217,8 +250,7 @@ export default function DashboardPage() {
         </section>
 
         <section className="dashboard-page__section">
-          <SectionLabel index="02">厨知道播报</SectionLabel>
-          <Row gutter={[14, 14]}>
+          <Row gutter={[16, 16]}>
             <Col xs={24} xl={14}>
               <Card
                 size="small"
@@ -229,15 +261,15 @@ export default function DashboardPage() {
                     <span>近 7 日 AI 提问趋势</span>
                   </Space>
                 }
-                extra={<Text type="secondary">ECharts Demo</Text>}
               >
-                <AiTrendChart data={DEMO_AI_TREND} />
+                <AiTrendChart data={aiTrend} />
               </Card>
             </Col>
             <Col xs={24} xl={10}>
               <Card
                 size="small"
-                className="dashboard-page__panel is-note"
+                className="dashboard-page__panel dashboard-page__panel--note"
+                variant="borderless"
                 title={
                   <Space>
                     <DislikeOutlined />
@@ -251,7 +283,7 @@ export default function DashboardPage() {
                   rowKey="key"
                   pagination={false}
                   columns={feedbackColumns}
-                  dataSource={DEMO_RECENT_FEEDBACK}
+                  dataSource={recentFeedback}
                 />
               </Card>
             </Col>
@@ -259,28 +291,22 @@ export default function DashboardPage() {
         </section>
 
         <section className="dashboard-page__section">
-          <SectionLabel index="03">人气菜谱墙</SectionLabel>
           <Card
-            size="small"
-            className="dashboard-page__panel is-wall"
-            title={
-              <Space>
-                <FireOutlined />
-                <span>热门菜谱 Top</span>
-              </Space>
-            }
+            className="dashboard-page__panel"
+            variant="borderless"
+            title="热门菜谱排行榜"
             extra={<Link to="/recipe/list">菜谱列表</Link>}
           >
             <Table<HotRecipeRow>
-              size="small"
+              size="middle"
               rowKey="key"
               pagination={false}
               columns={hotColumns}
-              dataSource={DEMO_HOT_RECIPES}
+              dataSource={hotRecipes}
             />
           </Card>
         </section>
-      </div>
+      </Spin>
     </div>
   )
 }

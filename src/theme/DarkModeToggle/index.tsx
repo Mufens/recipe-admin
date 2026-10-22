@@ -1,4 +1,3 @@
-import { MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { Button, Tooltip } from 'antd'
 import { flushSync } from 'react-dom'
 import type { MouseEvent } from 'react'

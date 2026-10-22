@@ -1,4 +1,3 @@
-import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Segmented, Spin, message, theme } from 'antd'
 import axios from 'axios'
 import { useEffect, useState } from 'react'

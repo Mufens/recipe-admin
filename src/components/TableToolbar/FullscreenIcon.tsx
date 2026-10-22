@@ -1,4 +1,3 @@
-import { FullscreenExitOutlined, FullscreenOutlined } from '@ant-design/icons'
 import { Tooltip } from 'antd'
 import { memo, useEffect, useState } from 'react'
 

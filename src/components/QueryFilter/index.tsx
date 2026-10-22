@@ -1,9 +1,3 @@
-import {
-  DownOutlined,
-  RedoOutlined,
-  SearchOutlined,
-  UpOutlined,
-} from '@ant-design/icons'
 import { Button, Form, type FormProps } from 'antd'
 import {
   useLayoutEffect,

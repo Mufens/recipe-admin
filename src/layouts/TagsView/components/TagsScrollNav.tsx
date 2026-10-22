@@ -1,4 +1,3 @@
-import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 import {
   useCallback,
   useEffect,

@@ -1,11 +1,6 @@
 import { Avatar, Form, Input, Pagination, Space, Button } from 'antd'
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
 import SmartTable from '@/components/SmartTable'
 import { type SmartColumn } from '@/components/TableToolbar'
 import { resolveMediaUrl } from '@/utils/media'

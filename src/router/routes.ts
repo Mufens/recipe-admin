@@ -5,8 +5,6 @@ export interface TagItem {
 
 export interface RouteMeta {
   title: string
-  /** 父级目录名，用于面包屑 */
-  parent?: string
   /** 侧边菜单高亮 key，子路由指回列表路径 */
   active?: string
 }
@@ -14,16 +12,16 @@ export interface RouteMeta {
 /** 路由 path → 页面元信息 */
 export const routeMetaMap: Record<string, RouteMeta> = {
   '/dashboard': { title: '数据看板' },
-  '/recipe/list': { title: '菜谱列表', parent: '菜谱管理' },
-  '/categories': { title: '分类管理', parent: '菜谱管理' },
-  '/banners': { title: '首页轮播', parent: '菜谱管理' },
-  '/users': { title: '用户管理', parent: '系统管理' },
-  '/ai/feedback': { title: '低满意问题榜', parent: '系统管理' },
-  '/recipe/detail': { title: '菜谱详情', parent: '菜谱列表', active: '/recipe/list' },
-  '/recipe/edit': { title: '编辑菜谱', parent: '菜谱列表', active: '/recipe/list' },
-  '/recipe/add': { title: '新增菜谱', parent: '菜谱列表', active: '/recipe/list' },
-  '/access': { title: '权限演示', parent: '菜谱管理' },
-  '/table': { title: 'CRUD 示例', parent: '菜谱管理' },
+  '/recipe/list': { title: '菜谱列表' },
+  '/categories': { title: '分类管理' },
+  '/banners': { title: '首页轮播' },
+  '/users': { title: '用户管理' },
+  '/ai/feedback': { title: '低满意问题榜' },
+  '/recipe/detail': { title: '菜谱详情', active: '/recipe/list' },
+  '/recipe/edit': { title: '编辑菜谱', active: '/recipe/list' },
+  '/recipe/add': { title: '新增菜谱', active: '/recipe/list' },
+  '/access': { title: '权限演示' },
+  '/table': { title: 'CRUD 示例' },
 }
 
 /** 路由 path → 标签标题 */

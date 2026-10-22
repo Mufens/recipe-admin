@@ -14,13 +14,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  HolderOutlined,
-  SettingOutlined,
-  VerticalAlignBottomOutlined,
-  VerticalAlignMiddleOutlined,
-  VerticalAlignTopOutlined,
-} from '@ant-design/icons'
 import { Checkbox, Popover, Tooltip } from 'antd'
 import { useMemo, type CSSProperties, type ReactNode } from 'react'
 import {

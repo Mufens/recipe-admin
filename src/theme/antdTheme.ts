@@ -1,6 +1,6 @@
 import { theme as antdTheme, type ThemeConfig } from 'antd'
 
-/** Ant Design ConfigProvider 主题：算法 + 主色 + 布局/菜单覆盖 */
+/** Ant Design ConfigProvider 主题：算法 + 主色 + 布局覆盖 */
 export function buildAntdTheme(
   isDark: boolean,
   colorPrimary: string,
@@ -19,15 +19,8 @@ export function buildAntdTheme(
       Layout: {
         siderBg: surface,
         headerBg: surface,
-        bodyBg: isDark ? '#000000' : '#f5f5f5',
+        bodyBg: isDark ? '#000000' : '#f7f8fa',
       },
-      Menu: isDark
-        ? {
-            darkItemBg: surface,
-            darkSubMenuItemBg: surface,
-            darkPopupBg: '#1f1f1f',
-          }
-        : undefined,
       Tag: {
         defaultBg: surface,
       },

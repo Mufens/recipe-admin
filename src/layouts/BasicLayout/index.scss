@@ -56,10 +56,6 @@
     font-size: 16px;
   }
 
-  &__breadcrumb {
-    font-size: 14px;
-  }
-
   &__header-actions {
     display: flex;
     gap: 4px;
@@ -114,24 +110,28 @@
   }
 
   &__content {
-    --content-padding-top: 16px;
-    --content-padding-x: 20px;
-    --content-padding-bottom: 12px;
-
     position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
     min-height: 0;
     margin: 16px;
-    padding: var(--content-padding-top) var(--content-padding-x)
-      var(--content-padding-bottom);
+    padding: 16px 20px 12px;
     overflow: auto;
+    background: var(--ant-color-bg-container);
+    border-radius: var(--ant-border-radius-lg);
 
     > * {
       flex: 1;
       min-height: 0;
       height: 100%;
+    }
+
+    &:has(.dashboard-page) {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border-radius: 0 !important;
     }
   }
 }

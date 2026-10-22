@@ -1,4 +1,3 @@
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons'
 import { Upload } from 'antd'
 import type { UploadProps } from 'antd'
 import { useEffect, useState } from 'react'
