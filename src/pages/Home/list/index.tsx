@@ -38,6 +38,7 @@ import {
   type SearchMode,
 } from './api'
 import BatchImportModal from './components/BatchImportModal'
+import RecipeLogModal from './components/RecipeLogModal'
 import './index.scss'
 import { type RecipeItem } from './model'
 
@@ -48,6 +49,7 @@ export default function Home() {
 
   const [exporting, setExporting] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [logRecipe, setLogRecipe] = useState<RecipeItem | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(50)
@@ -380,7 +382,7 @@ export default function Home() {
     {
       title: '操作',
       key: 'action',
-      width: 140,
+      width: 200,
       fixed: 'right',
       render: (_: unknown, record) => (
         <Space size={0}>
@@ -390,6 +392,13 @@ export default function Home() {
             onClick={() => navigate(`/recipe/edit?id=${record.id}`)}
           >
             编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => setLogRecipe(record)}
+          >
+            日志
           </Button>
           <Popconfirm
             title="确认删除该菜谱？"
@@ -561,6 +570,8 @@ export default function Home() {
           scroll={{ x: 'max-content' }}
         />
       </div>
+
+      <RecipeLogModal recipe={logRecipe} onCancel={() => setLogRecipe(null)} />
 
       <BatchImportModal
         open={importOpen}

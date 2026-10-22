@@ -70,6 +70,23 @@ export interface DeleteRecipesResult {
   ids: number[]
 }
 
+export interface RecipeLogItem {
+  id: number
+  recipe_id: number
+  event_type: string
+  content: string
+  create_by: string
+  create_time: string
+}
+
+/** 菜谱操作日志 */
+export function fetchRecipeLogs(recipeId: number, signal?: AbortSignal) {
+  return request.get<RecipeLogItem[]>('/api/detail/logs', {
+    params: { recipeId },
+    signal,
+  })
+}
+
 /** 删除菜谱（单条或批量，ids 英文逗号分隔） */
 export function deleteRecipes(ids: Array<string | number | bigint>) {
   return request.post<DeleteRecipesResult>('/api/detail/delete', {
