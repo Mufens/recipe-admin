@@ -2,10 +2,12 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig } from 'vite'
+import svgr from 'vite-plugin-svgr'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    svgr({ svgrOptions: { svgo: false } }),
     react(),
     AutoImport({
       imports: [],

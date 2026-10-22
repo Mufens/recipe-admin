@@ -1,0 +1,10 @@
+<svg class="login-page__bg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="var(--ant-color-bg-layout)" />
+  <g fill="var(--ant-color-primary)">
+    <circle r="14.7%" cx="82%" cy="83%" />
+    <circle r="6.5%" cx="39%" cy="32%" />
+    <circle r="8.5%" cx="79%" cy="16%" />
+    <circle r="9.7%" cx="22%" cy="79.5%" />
+    <circle r="9.9%" cx="2.9%" cy="7.8%" />
+  </g>
+</svg>
