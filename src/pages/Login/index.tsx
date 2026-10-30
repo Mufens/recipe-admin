@@ -2,11 +2,10 @@ import { Button, Form, Input, Segmented, Spin, message, theme } from 'antd'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import LoginBg from '@/assets/login-bg.svg?react'
 import logo from '@/assets/logo.svg'
 import DarkModeToggle from '@/theme/DarkModeToggle'
 import ThemeSwitcher from '@/theme/ThemeSwitcher'
-import { getToken, setAdmin, setToken } from '@/utils/auth'
+import { getToken, setToken } from '@/utils/auth'
 import { fetchFeishuUrl, loginAdmin } from './api'
 import './index.scss'
 
@@ -93,11 +92,20 @@ export default function LoginPage() {
     }
   }, [mode])
 
-  if (getToken()) return <Navigate to="/dashboard" replace />
+  if (getToken()) return <Navigate to="/" replace />
 
   return (
     <div className="login-page">
-      <LoginBg />
+      <svg className="login-page__bg" aria-hidden="true">
+        <rect width="100%" height="100%" fill={token.colorBgLayout} />
+        <g fill={token.colorPrimary}>
+          <circle r="14.7%" cx="82%" cy="83%" />
+          <circle r="6.5%" cx="39%" cy="32%" />
+          <circle r="8.5%" cx="79%" cy="16%" />
+          <circle r="9.7%" cx="22%" cy="79.5%" />
+          <circle r="9.9%" cx="2.9%" cy="7.8%" />
+        </g>
+      </svg>
 
       <div className="login-page__tools">
         <DarkModeToggle />
@@ -151,15 +159,14 @@ export default function LoginPage() {
         ) : (
           <Form
             size="large"
-            initialValues={{ username: 'admin', password: '123456' }}
-            onFinish={async (values: { username: string; password: string }) => {
+            initialValues={{ name: 'admin', password: '123456' }}
+            onFinish={async (values: { name: string; password: string }) => {
               setSubmitting(true)
               try {
                 const data = await loginAdmin(values)
                 setToken(data.token)
-                setAdmin(data.admin)
                 message.success('登录成功')
-                navigate('/dashboard', { replace: true })
+                navigate('/', { replace: true })
               } catch(e) {
                 console.error('登录失败', e)
               } finally {
@@ -167,11 +174,11 @@ export default function LoginPage() {
               }
             }}
           >
-            <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+            <Form.Item name="name" rules={[{ required: true, message: '请输入姓名' }]}>
               <Input
                 prefix={<UserOutlined />}
-                placeholder="用户名"
-                maxLength={32}
+                placeholder="姓名"
+                maxLength={50}
                 autoComplete="username"
               />
             </Form.Item>

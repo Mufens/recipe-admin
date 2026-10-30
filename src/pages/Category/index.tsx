@@ -81,12 +81,12 @@ export default function CategoryPage() {
           <SmartTable
             toolbar={
               <>
-                {m.canAddSub && (
+                {permission('category_add_btn') && m.canAddSub && (
                   <Button type="primary" onClick={m.openCreateSub}>
                     新建分组
                   </Button>
                 )}
-                {m.canAddTag && (
+                {permission('category_add_btn') && m.canAddTag && (
                   <Button type="primary" onClick={m.openCreateTag}>
                     新增标签
                   </Button>

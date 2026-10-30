@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import PageToolbar from '@/components/PageToolbar'
 import { fetchRecipeDetail } from './api'
-import { difficultyColor } from '@/utils/difficulty'
+import { difficultyColor } from '../common/difficulty'
 import { imageProps, resolveMediaUrl } from '@/utils/media'
 import type { RecipeDetail } from './model'
 import './index.scss'
@@ -24,8 +24,10 @@ const { Title, Paragraph, Text } = Typography
 
 function RecipeSteps({
   steps,
+  ratio,
 }: {
   steps: NonNullable<RecipeDetail['steps']>
+  ratio: string | null
 }) {
   return (
     <Card
@@ -33,23 +35,28 @@ function RecipeSteps({
       className="detail-page__section"
       size="small"
     >
-      <ol className="detail-page__steps">
+      <ol
+        className="detail-page__steps"
+        style={{ '--step-aspect': ratio === '3/4' ? '3 / 4' : '16 / 9' }}
+      >
         {steps.map((step, index) => (
           <li key={index} className="detail-page__step">
-            <span className="detail-page__step-index" aria-hidden>
-              {index + 1}
-            </span>
             <div className="detail-page__step-main">
+              <span className="detail-page__step-index" aria-hidden>
+                {index + 1}
+              </span>
               <p className="detail-page__step-text">{step.text}</p>
-              {step.image ? (
-                <Image
-                  src={resolveMediaUrl(step.image)}
-                  alt={`步骤 ${index + 1}`}
-                  className="detail-page__step-image"
-                  {...imageProps}
-                />
-              ) : null}
             </div>
+            {step.image ? (
+              <Image
+                src={resolveMediaUrl(step.image)}
+                alt={`步骤 ${index + 1}`}
+                className="detail-page__step-image"
+                {...imageProps}
+              />
+            ) : (
+              <span className="detail-page__step-placeholder" />
+            )}
           </li>
         ))}
       </ol>
@@ -275,7 +282,7 @@ export default function Detail() {
       </Card>
 
       {steps.length > 0 ? (
-        <RecipeSteps key={recipe.id} steps={steps} />
+        <RecipeSteps key={recipe.id} steps={steps} ratio={recipe.ratio} />
       ) : (
         <Card
           title="制作步骤（0）"

@@ -10,7 +10,11 @@ export default defineConfig({
     svgr({ svgrOptions: { svgo: false } }),
     react(),
     AutoImport({
-      imports: [],
+      imports: [
+        {
+          '@/hooks/usePermission': ['permission'],
+        },
+      ],
       dts: 'src/types/auto-imports.d.ts',
       resolvers: [
         (name) => {
@@ -27,6 +31,8 @@ export default defineConfig({
     },
   },
   server: {
+    host: '127.0.0.1', // 不要写 localhost，localhost 会解析到 ::1
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8080',

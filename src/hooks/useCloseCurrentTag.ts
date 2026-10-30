@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useAliveController } from 'react-activation'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { getActiveTagKey, routeMetaMap } from '@/router/routes'
+import { getTagScopedKey, routeMetaMap } from '@/router/routes'
 import { useTagsStore, type ListReturnAction } from '@/store/tags'
 
 /** 关闭当前 tags-view 标签（含 KeepAlive），并回到对应列表页 */
@@ -16,7 +16,7 @@ export function useCloseCurrentTag() {
       if (action) {
         useTagsStore.getState().markListReturn(listPath, action)
       }
-      const key = getActiveTagKey(pathname, search)
+      const key = getTagScopedKey(pathname, search)
       useTagsStore.getState().removeTag(key)
       drop(key)
       navigate(listPath)

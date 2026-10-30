@@ -21,6 +21,9 @@ export function buildAntdTheme(
         headerBg: surface,
         bodyBg: isDark ? '#000000' : '#f7f8fa',
       },
+      Menu: {
+        subMenuItemBg: surface,
+      },
       Tag: {
         defaultBg: surface,
       },

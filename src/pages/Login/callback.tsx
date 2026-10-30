@@ -1,7 +1,7 @@
 import { Spin } from 'antd'
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { setAdmin, setToken } from '@/utils/auth'
+import { setToken } from '@/utils/auth'
 import { exchangeFeishuTicket } from './api'
 
 export default function LoginCallback() {
@@ -19,8 +19,7 @@ export default function LoginCallback() {
       .then((data) => {
         if (cancelled) return
         setToken(data.token)
-        setAdmin(data.admin)
-        navigate('/dashboard', { replace: true })
+        navigate('/', { replace: true })
       })
       .catch(() => {
         if (!cancelled) navigate('/login', { replace: true })

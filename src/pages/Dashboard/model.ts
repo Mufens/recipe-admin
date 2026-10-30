@@ -11,6 +11,7 @@ export interface DashboardStat {
   title: string
   value: number
   suffix?: string
+  /** 较上一周期的增减文案 */
   delta: string
   trend: 'up' | 'down' | 'flat'
   /** 小数位；整数不传 */

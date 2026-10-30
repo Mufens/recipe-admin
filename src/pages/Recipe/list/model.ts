@@ -1,6 +1,7 @@
 export interface RecipeTag {
   id: number
   name: string
+  /** 从一级到叶子的分类路径 */
   path_label?: string
 }
 

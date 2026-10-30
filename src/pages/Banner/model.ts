@@ -22,8 +22,10 @@ export interface BannerItem {
   layout: BannerLayout
   cta: string | null
   link_type: BannerLinkType
+  /** 跳转参数，含义随 link_type */
   link_value: string | null
   covers: BannerCover[]
   sort_order: number
+  /** 1 启用，0 停用 */
   is_active: number
 }

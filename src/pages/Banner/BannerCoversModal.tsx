@@ -1,4 +1,4 @@
-import { fetchRecipeList } from '@/pages/Home/list/api'
+import { fetchRecipeList } from '@/pages/Recipe/list/api'
 import { imageProps, resolveMediaUrl } from '@/utils/media'
 import { useQuery } from '@tanstack/react-query'
 import { Image, Input, Modal, Spin } from 'antd'

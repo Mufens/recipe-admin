@@ -1,12 +1,12 @@
 import { Avatar, Button, Dropdown, Layout, Menu } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import DarkModeToggle from '@/theme/DarkModeToggle'
 import ThemeSwitcher from '@/theme/ThemeSwitcher'
 import TagsView from '@/layouts/TagsView'
+import { useAdminProfile } from '@/hooks/usePermission'
 import { routeMetaMap } from '@/router/routes'
-import { fetchAdminProfile } from '@/pages/Login/api'
-import { clearToken, getAdmin, setAdmin } from '@/utils/auth'
+import { clearToken } from '@/utils/auth'
 import logo from '@/assets/logo.svg'
 import './index.scss'
 
@@ -14,7 +14,16 @@ const DEFAULT_AVATAR = 'https://images.ishidao.xin/cat/avatar.jpg'
 
 const { Header, Sider, Content } = Layout
 
-const menuItems = [
+const systemPaths = ['/admin/accounts', '/admin/roles', '/admin/resources'] as const
+
+type SideItem = {
+  key: string
+  icon: ReactNode
+  label: string
+  children?: { key: string; label: string }[]
+}
+
+const menuItems: SideItem[] = [
   {
     key: '/dashboard',
     icon: <DashboardOutlined />,
@@ -46,14 +55,13 @@ const menuItems = [
     label: '低满意问题榜',
   },
   {
-    key: '/access',
-    icon: <UserOutlined />,
-    label: '权限演示',
-  },
-  {
-    key: '/table',
-    icon: <TableOutlined />,
-    label: 'CRUD 示例',
+    key: 'system',
+    icon: <SettingOutlined />,
+    label: '系统管理',
+    children: systemPaths.map((path) => ({
+      key: path,
+      label: routeMetaMap[path].title,
+    })),
   },
 ]
 
@@ -62,27 +70,27 @@ export default function BasicLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [admin, setAdminState] = useState(getAdmin)
-  const displayName = admin?.name || admin?.username || 'admin'
-
-  useEffect(() => {
-    let cancelled = false
-    fetchAdminProfile()
-      .then((data) => {
-        if (cancelled) return
-        setAdmin(data)
-        setAdminState(data)
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
+  const { data: admin } = useAdminProfile()
+  const displayName = admin?.name || 'admin'
+  const items = useMemo(() => {
+    if (!admin) return menuItems
+    const allow = (path: string) => {
+      const code = routeMetaMap[path]?.permission
+      return !code || admin.permissions.includes(code)
     }
-  }, [])
+    return menuItems.flatMap((item) => {
+      if (!item.children) return allow(item.key) ? [item] : []
+      const children = item.children.filter((child) => allow(child.key))
+      return children.length ? [{ ...item, children }] : []
+    })
+  }, [admin])
 
-  const selectedKeys = useMemo(
-    () => [routeMetaMap[location.pathname]?.active ?? location.pathname],
-    [location.pathname],
-  )
+  const selectedKey = routeMetaMap[location.pathname]?.active ?? location.pathname
+  const [openKeys, setOpenKeys] = useState<string[]>([])
+  const menuOpenKeys =
+    (systemPaths as readonly string[]).includes(selectedKey) && !openKeys.includes('system')
+      ? [...openKeys, 'system']
+      : openKeys
 
   return (
     <Layout className="basic-layout">
@@ -101,9 +109,14 @@ export default function BasicLayout() {
         </div>
         <Menu
           mode="inline"
-          selectedKeys={selectedKeys}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          selectedKeys={[selectedKey]}
+          items={items}
+          onClick={({ key }) => {
+            if (routeMetaMap[key]) navigate(key)
+          }}
+          {...(collapsed
+            ? {}
+            : { openKeys: menuOpenKeys, onOpenChange: setOpenKeys })}
         />
       </Sider>
       <Layout>

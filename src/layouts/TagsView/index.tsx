@@ -25,11 +25,7 @@ import {
   type MouseEvent,
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  getActiveTagKey,
-  resolveTagFromLocation,
-  type TagItem,
-} from '@/router/routes'
+import { getTagScopedKey, routeMetaMap, type TagItem } from '@/router/routes'
 import { useTagsStore } from '@/store/tags'
 import TagContextMenu from './components/TagContextMenu'
 import TagsScrollNav from './components/TagsScrollNav'
@@ -124,13 +120,17 @@ export default function TagsView() {
   const { pathname, search } = useLocation()
   const navigate = useNavigate()
   const { tags, addTag, setTags } = useTagsStore()
-  const activeKey = getActiveTagKey(pathname, search)
+  const activeKey = getTagScopedKey(pathname, search)
   const { drop } = useAliveController()
 
   const initedRef = useRef(false)
   useEffect(() => {
-    const tag = resolveTagFromLocation(pathname, search)
-    if (!tag) return
+    const meta = routeMetaMap[pathname]
+    if (!meta) return
+    const tag: TagItem = {
+      path: getTagScopedKey(pathname, search),
+      title: meta.title,
+    }
     if (!initedRef.current) {
       initedRef.current = true
       setTags([tag])

@@ -3,7 +3,7 @@ import { Card, Col, Row, Space, Spin, Table, Tag, Typography } from 'antd'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardPan from '@/assets/dashboard-pan.svg?react'
-import { getAdmin } from '@/utils/auth'
+import { useAdminProfile } from '@/hooks/usePermission'
 import AiTrendChart from './AiTrendChart'
 import { fetchOverview } from './api'
 import {
@@ -79,8 +79,8 @@ function greetLabel() {
 }
 
 export default function DashboardPage() {
-  const admin = getAdmin()
-  const adminName = admin?.name || admin?.username || '管理员'
+  const { data: profile } = useAdminProfile()
+  const adminName = profile?.name || '管理员'
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: ({ signal }) => fetchOverview(signal),

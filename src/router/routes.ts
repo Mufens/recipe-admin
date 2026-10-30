@@ -1,3 +1,5 @@
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
+
 export interface TagItem {
   path: string
   title: string
@@ -7,62 +9,93 @@ export interface RouteMeta {
   title: string
   /** 侧边菜单高亮 key，子路由指回列表路径 */
   active?: string
+  /** 权限编码 */
+  permission?: string
 }
+
+export interface AppRoute {
+  path: string
+  Component: LazyExoticComponent<ComponentType>
+  meta: RouteMeta
+}
+
+export const appRoutes: AppRoute[] = [
+  {
+    path: '/dashboard',
+    Component: lazy(() => import('@/pages/Dashboard')),
+    meta: { title: '数据看板', permission: 'dashboard' },
+  },
+  {
+    path: '/recipe/list',
+    Component: lazy(() => import('@/pages/Recipe/list')),
+    meta: { title: '菜谱列表', permission: 'recipe_list' },
+  },
+  {
+    path: '/categories',
+    Component: lazy(() => import('@/pages/Category')),
+    meta: { title: '分类管理', permission: 'category' },
+  },
+  {
+    path: '/banners',
+    Component: lazy(() => import('@/pages/Banner')),
+    meta: { title: '首页轮播', permission: 'banner' },
+  },
+  {
+    path: '/users',
+    Component: lazy(() => import('@/pages/User/list')),
+    meta: { title: '用户管理', permission: 'user_list' },
+  },
+  {
+    path: '/ai/feedback',
+    Component: lazy(() => import('@/pages/AiFeedback')),
+    meta: { title: '低满意问题榜', permission: 'ai_feedback' },
+  },
+  {
+    path: '/admin/accounts',
+    Component: lazy(() => import('@/pages/AdminAccount')),
+    meta: { title: '内部账号', permission: 'admin_account' },
+  },
+  {
+    path: '/admin/roles',
+    Component: lazy(() => import('@/pages/AdminRole')),
+    meta: { title: '角色管理', permission: 'admin_role' },
+  },
+  {
+    path: '/admin/resources',
+    Component: lazy(() => import('@/pages/AdminResource')),
+    meta: { title: '资源管理', permission: 'admin_resource' },
+  },
+  {
+    path: '/recipe/detail',
+    Component: lazy(() => import('@/pages/Recipe/detail')),
+    meta: { title: '菜谱详情', active: '/recipe/list', permission: 'recipe_list' },
+  },
+  {
+    path: '/recipe/edit',
+    Component: lazy(() => import('@/pages/Recipe/edit')),
+    meta: {
+      title: '编辑菜谱',
+      active: '/recipe/list',
+      permission: 'recipe_list_edit_btn',
+    },
+  },
+  {
+    path: '/recipe/add',
+    Component: lazy(() => import('@/pages/Recipe/add')),
+    meta: {
+      title: '新增菜谱',
+      active: '/recipe/list',
+      permission: 'recipe_list_add_btn',
+    },
+  },
+]
 
 /** 路由 path → 页面元信息 */
-export const routeMetaMap: Record<string, RouteMeta> = {
-  '/dashboard': { title: '数据看板' },
-  '/recipe/list': { title: '菜谱列表' },
-  '/categories': { title: '分类管理' },
-  '/banners': { title: '首页轮播' },
-  '/users': { title: '用户管理' },
-  '/ai/feedback': { title: '低满意问题榜' },
-  '/recipe/detail': { title: '菜谱详情', active: '/recipe/list' },
-  '/recipe/edit': { title: '编辑菜谱', active: '/recipe/list' },
-  '/recipe/add': { title: '新增菜谱', active: '/recipe/list' },
-  '/access': { title: '权限演示' },
-  '/table': { title: 'CRUD 示例' },
-}
-
-/** 路由 path → 标签标题 */
-export const routeTitleMap: Record<string, string> = Object.fromEntries(
-  Object.entries(routeMetaMap).map(([path, meta]) => [path, meta.title]),
+export const routeMetaMap: Record<string, RouteMeta> = Object.fromEntries(
+  appRoutes.map((route) => [route.path, route.meta]),
 )
 
-/** 统一获取详情/编辑页的唯一 key（供 tag 去重和激活判断共用） */
-function getScopedPath(pathname: string, search: string): string {
-  if (pathname === '/recipe/detail' || pathname === '/recipe/edit') {
-    const id = new URLSearchParams(search).get('id')
-    if (id) return `${pathname}?id=${id}`
-  }
-  return pathname
-}
-
-/** 根据当前 location 生成唯一 Tag（详情/编辑页按 id 区分） */
-export function resolveTagFromLocation(
-  pathname: string,
-  search: string,
-): TagItem | null {
-  const key = getScopedPath(pathname, search)
-
-  if (pathname === '/recipe/detail') {
-    const id = new URLSearchParams(search).get('id')
-    if (!id) return null
-    return { path: key, title: `菜谱详情 ${id}` }
-  }
-
-  if (pathname === '/recipe/edit') {
-    const id = new URLSearchParams(search).get('id')
-    if (!id) return null
-    return { path: key, title: `编辑菜谱 ${id}` }
-  }
-
-  const title = routeTitleMap[pathname]
-  if (!title) return null
-  return { path: key, title }
-}
-
-/** 当前激活的 tag key */
-export function getActiveTagKey(pathname: string, search: string): string {
-  return getScopedPath(pathname, search)
+/** 页签和缓存键，search 为空时就是 pathname */
+export function getTagScopedKey(pathname: string, search: string) {
+  return `${pathname}${search}`
 }

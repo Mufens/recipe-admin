@@ -46,6 +46,7 @@ declare global {
   const ReloadOutlined: typeof import('@ant-design/icons').ReloadOutlined
   const RightOutlined: typeof import('@ant-design/icons').RightOutlined
   const RobotOutlined: typeof import('@ant-design/icons').RobotOutlined
+  const SafetyCertificateOutlined: typeof import('@ant-design/icons').SafetyCertificateOutlined
   const SearchOutlined: typeof import('@ant-design/icons').SearchOutlined
   const SettingOutlined: typeof import('@ant-design/icons').SettingOutlined
   const StarOutlined: typeof import('@ant-design/icons').StarOutlined
@@ -59,4 +60,5 @@ declare global {
   const VerticalAlignBottomOutlined: typeof import('@ant-design/icons').VerticalAlignBottomOutlined
   const VerticalAlignMiddleOutlined: typeof import('@ant-design/icons').VerticalAlignMiddleOutlined
   const VerticalAlignTopOutlined: typeof import('@ant-design/icons').VerticalAlignTopOutlined
+  const permission: typeof import('@/hooks/usePermission').permission
 }

@@ -1,0 +1,270 @@
+.role-page {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+
+  &__search {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 12px;
+
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: 0;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-inline-end: 1px solid var(--ant-color-border-secondary);
+  }
+
+  &__aside-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 8px 8px 14px;
+    font-size: 15px;
+    font-weight: 600;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      &::before {
+        content: '';
+        width: 3px;
+        height: 14px;
+        border-radius: 2px;
+        background: var(--ant-color-primary);
+      }
+    }
+  }
+
+  &__list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 0 8px 12px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0 0 2px;
+    border-radius: 6px;
+    color: var(--ant-color-text);
+
+    &:hover {
+      background: var(--ant-color-fill-tertiary);
+    }
+
+    &.is-active {
+      color: var(--ant-color-primary);
+      background: var(--ant-color-primary-bg);
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 4px 8px 12px;
+    overflow: hidden;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  &__delete {
+    flex: none;
+    margin-inline-end: 4px;
+    opacity: 0;
+    pointer-events: none;
+
+    &.is-open,
+    .role-page__item:hover & {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 0 16px 16px;
+  }
+
+  &__placeholder,
+  &__loading {
+    display: grid;
+    place-items: center;
+    min-height: 160px;
+    color: var(--ant-color-text-secondary);
+  }
+}
+
+.role-profile {
+  max-width: 560px;
+  padding-top: 12px;
+}
+
+.role-members {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+
+  &__picker {
+    display: flex;
+    height: 420px;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: 6px;
+  }
+
+  &__depts {
+    width: 240px;
+    overflow: auto;
+    padding: 8px 4px;
+    border-right: 1px solid var(--ant-color-border-secondary);
+  }
+
+  &__people {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 12px;
+  }
+
+  &__person {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    margin-inline-start: 0;
+  }
+
+  &__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__record {
+    line-height: 22px;
+  }
+
+  &__empty {
+    display: block;
+    padding: 12px;
+    color: var(--ant-color-text-secondary);
+  }
+}
+
+.role-perm {
+  padding-top: 4px;
+
+  &__bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  &__search {
+    width: 260px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  &__updated {
+    color: var(--ant-color-text-secondary);
+    font-size: 12px;
+    line-height: 22px;
+  }
+
+  &__empty {
+    display: block;
+    padding: 12px;
+    color: var(--ant-color-text-secondary);
+  }
+
+  &__tree {
+    padding: 8px 12px;
+    overflow: auto;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: 6px;
+
+    .ant-tree-treenode {
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .ant-tree-switcher,
+    .ant-tree-checkbox {
+      margin-top: 3px;
+    }
+
+    .ant-tree-node-content-wrapper {
+      flex: 1;
+      min-width: 0;
+      height: auto;
+      line-height: 22px;
+    }
+
+    .ant-tree-title {
+      display: block;
+    }
+  }
+
+  &__node {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  &__name {
+    line-height: 22px;
+  }
+
+  &__buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px 12px;
+    box-sizing: border-box;
+    width: 100%;
+    padding-inline-start: 24px;
+    line-height: 22px;
+
+    .ant-checkbox-wrapper {
+      margin-inline-start: 0;
+      white-space: nowrap;
+    }
+  }
+}

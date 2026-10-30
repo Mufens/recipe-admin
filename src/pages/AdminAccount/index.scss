@@ -1,0 +1,27 @@
+.account-page {
+  display: grid;
+  grid-template-rows: auto minmax(240px, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+
+  &__panel {
+    min-height: 0;
+    background: var(--ant-color-bg-container);
+  }
+
+  &__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__record {
+    line-height: 22px;
+  }
+}
+
+.account-roles {
+  display: grid;
+  gap: 8px;
+}

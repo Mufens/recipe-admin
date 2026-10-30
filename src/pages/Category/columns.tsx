@@ -59,11 +59,12 @@ export function buildCategoryColumns({
       ellipsis: true,
       render: (name: string, row) => {
         if (row.kind === 'tag') return <span>{name}</span>
+        const kind = row.kind
         return (
           <Button
             type="link"
             className="category-page__name-link"
-            onClick={() => selectNode({ kind: row.kind, id: String(row.id) })}
+            onClick={() => selectNode({ kind, id: String(row.id) })}
           >
             {name}
           </Button>
@@ -100,17 +101,21 @@ export function buildCategoryColumns({
       ellipsis: true,
       render: (v: string | null) => v || '-',
     },
-    {
+  )
+
+  cols.push({
       title: '操作',
       key: 'action',
       width: 180,
       fixed: 'right',
       render: (_: unknown, row) => (
         <Space size={0}>
-          <Button type="link" size="small" onClick={() => openRename(row)}>
-            修改
-          </Button>
-          {row.kind === 'tag' && (
+          {permission('category_edit_btn') && (
+            <Button type="link" size="small" onClick={() => openRename(row)}>
+              修改
+            </Button>
+          )}
+          {permission('category_delete_btn') && row.kind === 'tag' && (
             <Popconfirm
               title="确认删掉这个标签？"
               description="有菜谱在用时会拦下来"
@@ -126,8 +131,7 @@ export function buildCategoryColumns({
           )}
         </Space>
       ),
-    },
-  )
+    })
 
   return cols
 }

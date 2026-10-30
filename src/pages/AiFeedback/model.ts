@@ -11,8 +11,10 @@ export type FeedbackReasonCode = (typeof FEEDBACK_REASONS)[number]['code']
 export interface LowSatisfactionItem {
   id: number
   question: string
+  /** 问题类型码，中文不在这 */
   questionType: string
   vote: 'up' | 'down'
+  /** 不满意原因码 */
   reason: string
   answer: string
   note: string

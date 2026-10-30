@@ -3,7 +3,6 @@ import SmartTable from '@/components/SmartTable'
 import { type SmartColumn } from '@/components/TableToolbar'
 import { useCategoryTree } from '@/hooks/useCategoryTree'
 import { useTagsStore } from '@/store/tags'
-import { difficultyColor, difficultyOptions } from '@/utils/difficulty'
 import { imageProps, resolveMediaUrl } from '@/utils/media'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -29,7 +28,8 @@ import {
   extractLeafTagIds,
   resolvePathByTagId,
   type CategoryPaths,
-} from '../utils/categoryPath'
+} from '../common/categoryPath'
+import { difficultyColor, difficultyOptions } from '../common/difficulty'
 import {
   deleteRecipes,
   exportRecipes,
@@ -42,7 +42,7 @@ import RecipeLogModal from './components/RecipeLogModal'
 import './index.scss'
 import { type RecipeItem } from './model'
 
-export default function Home() {
+export default function RecipeList() {
   const navigate = useNavigate()
   const location = useLocation()
   const pageRef = useRef<HTMLDivElement>(null)
@@ -377,49 +377,49 @@ export default function Home() {
     [],
   )
 
-  const columns: SmartColumn<RecipeItem>[] = [
-    ...baseColumns,
-    {
+  const columns: SmartColumn<RecipeItem>[] = [...baseColumns]
+  columns.push({
       title: '操作',
       key: 'action',
       width: 200,
       fixed: 'right',
       render: (_: unknown, record) => (
         <Space size={0}>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => navigate(`/recipe/edit?id=${record.id}`)}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => setLogRecipe(record)}
-          >
-            日志
-          </Button>
-          <Popconfirm
-            title="确认删除该菜谱？"
-            description="删除后不可恢复"
-            okText="删除"
-            okType="danger"
-            cancelText="取消"
-            onConfirm={() => void handleDelete([record.id])}
-          >
-            <Button type="link" danger size="small">
-              删除
+          {permission('recipe_list_edit_btn') && (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => navigate(`/recipe/edit?id=${record.id}`)}
+            >
+              编辑
             </Button>
-          </Popconfirm>
+          )}
+          {permission('recipe_list_log_btn') && (
+            <Button type="link" size="small" onClick={() => setLogRecipe(record)}>
+              日志
+            </Button>
+          )}
+          {permission('recipe_list_delete_btn') && (
+            <Popconfirm
+              title="确认删除该菜谱？"
+              description="删除后不可恢复"
+              okText="删除"
+              okType="danger"
+              cancelText="取消"
+              onConfirm={() => void handleDelete([record.id])}
+            >
+              <Button type="link" danger size="small">
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
-    },
-  ]
+    })
 
   return (
     <div ref={pageRef} className="home-page">
-      <QueryFilter row={2} onFinish={handleSearch} onReset={handleReset}>
+      <QueryFilter  onFinish={handleSearch} onReset={handleReset}>
         <Form.Item label="菜谱名称">
           <Input
             allowClear
@@ -506,35 +506,40 @@ export default function Home() {
         <SmartTable<RecipeItem>
           toolbar={
             <>
-              <Button
-                type="primary"
-                icon={<PlusCircleOutlined />}
-                onClick={() => void handleAdd()}
-              >
-                新增
-              </Button>
-              <Button
-                icon={<ImportOutlined />}
-                onClick={() => setImportOpen(true)}
-              >
-                批量导入
-              </Button>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                loading={deleting}
-                disabled={!selectedRowKeys.length}
-                onClick={handleBatchDelete}
-              >
-                批量删除
-              </Button>
-              <Button
-                icon={<UploadOutlined />}
-                loading={exporting}
-                onClick={() => void handleExport()}
-              >
-                导出
-              </Button>
+              {permission('recipe_list_add_btn') && (
+                <Button
+                  type="primary"
+                  icon={<PlusCircleOutlined />}
+                  onClick={() => void handleAdd()}
+                >
+                  新增
+                </Button>
+              )}
+              {permission('recipe_list_import_btn') && (
+                <Button icon={<ImportOutlined />} onClick={() => setImportOpen(true)}>
+                  批量导入
+                </Button>
+              )}
+              {permission('recipe_list_delete_btn') && (
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deleting}
+                  disabled={!selectedRowKeys.length}
+                  onClick={handleBatchDelete}
+                >
+                  批量删除
+                </Button>
+              )}
+              {permission('recipe_list_export_btn') && (
+                <Button
+                  icon={<UploadOutlined />}
+                  loading={exporting}
+                  onClick={() => void handleExport()}
+                >
+                  导出
+                </Button>
+              )}
             </>
           }
           tableToolbar={{
@@ -558,11 +563,15 @@ export default function Home() {
             />
           }
           rowKey="id"
-          rowSelection={{
-            selectedRowKeys,
-            onChange: setSelectedRowKeys,
-            preserveSelectedRowKeys: true,
-          }}
+          rowSelection={
+            permission('recipe_list_delete_btn')
+              ? {
+                  selectedRowKeys,
+                  onChange: setSelectedRowKeys,
+                  preserveSelectedRowKeys: true,
+                }
+              : undefined
+          }
           columns={columns}
           dataSource={data}
           loading={loading}

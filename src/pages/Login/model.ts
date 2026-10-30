@@ -1,10 +1,11 @@
-import type { StoredAdmin } from '@/utils/auth'
-
-export interface AdminProfile extends StoredAdmin {
+export interface AdminProfile {
   id: number
+  name: string
+  avatar: string | null
+  permissions: string[]
 }
 
 export interface LoginResult {
   token: string
-  admin: AdminProfile
+  admin: Pick<AdminProfile, 'id' | 'name' | 'avatar'>
 }

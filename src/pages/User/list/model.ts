@@ -7,9 +7,13 @@ export interface UserItem {
   province: string | null
   birthday: string | null
   profession: string | null
+  /** 家乡 */
   home: string | null
+  /** 简介 */
   des: string | null
+  /** 关注数 */
   attention: number
+  /** 粉丝数 */
   fan: number
 }
 

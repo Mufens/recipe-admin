@@ -35,12 +35,13 @@ instance.interceptors.response.use(
     return Promise.reject(data)
   },
   (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      window.location.pathname !== '/login' &&
+      window.location.pathname !== '/login/callback'
+    ) {
       clearToken()
-      const path = window.location.pathname
-      if (path === '/login/callback' || !path.startsWith('/login')) {
-        window.location.assign('/login')
-      }
+      window.location.replace('/login')
     }
     // 取消 / 关闭 toast 时不提示
     if (!axios.isCancel(error) && error?.config?.errToast !== false) {

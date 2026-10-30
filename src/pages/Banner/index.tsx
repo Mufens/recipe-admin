@@ -147,14 +147,19 @@ export default function BannerPage() {
       key: 'is_active',
       dataIndex: 'is_active',
       width: 88,
-      render: (val: number, row: BannerItem) => (
-        <Switch
-          checked={Boolean(val)}
-          onChange={(checked) =>
-            activeMutation.mutate({ id: row.id, isActive: checked })
-          }
-        />
-      ),
+      render: (val: number, row: BannerItem) =>
+        permission('banner_toggle_btn') ? (
+          <Switch
+            checked={Boolean(val)}
+            onChange={(checked) =>
+              activeMutation.mutate({ id: row.id, isActive: checked })
+            }
+          />
+        ) : val ? (
+          '启用'
+        ) : (
+          '停用'
+        ),
     },
     {
       title: '操作',
@@ -162,14 +167,13 @@ export default function BannerPage() {
       width: 108,
       fixed: 'right',
       render: (_: unknown, row: BannerItem) =>
-        needsFixedCovers(row.layout) ? (
+        permission('banner_edit_btn') && needsFixedCovers(row.layout) ? (
           <Button type="link" size="small" onClick={() => setEditing(row)}>
             设置封面
           </Button>
         ) : null,
     },
   ]
-
   return (
     <div ref={pageRef} className="banner-page">
       <div className="banner-page__panel">

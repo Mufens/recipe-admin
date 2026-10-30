@@ -10,18 +10,18 @@ import {
   Spin,
   message,
 } from 'antd'
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { Rule } from 'antd/es/form'
 import PageToolbar from '@/components/PageToolbar'
 import { useCategoryTree } from '@/hooks/useCategoryTree'
 import { useCloseCurrentTag } from '@/hooks/useCloseCurrentTag'
-import { difficultyOptions } from '@/utils/difficulty'
+import { difficultyOptions } from '../common/difficulty'
 import { fetchRecipeDetail } from '../detail/api'
 import IngredientRows from '../components/IngredientRows'
 import StepsFormList from '../components/StepsFormList'
-import { resolveCategoryPaths } from '../utils/categoryPath'
+import { resolveCategoryPaths } from '../common/categoryPath'
 import { updateRecipe } from './api'
 import type { RecipeEditFormData, RecipeIngredient } from './model'
 import '../add/index.scss'
@@ -65,8 +65,12 @@ export default function Edit() {
     enabled: !!id,
   })
 
-  useEffect(() => {
-    if (!recipe || !categoryTree.length) return
+  useLayoutEffect(() => {
+    form.resetFields()
+  }, [id, form])
+
+  useLayoutEffect(() => {
+    if (!recipe || String(recipe.id) !== id || !categoryTree.length) return
     const ingredients = recipe.ingredients ?? []
     const steps = recipe.steps ?? []
     form.setFieldsValue({
@@ -77,7 +81,7 @@ export default function Edit() {
       steps: steps.length ? steps : [{ text: '', image: '' }],
       categoryPaths: resolveCategoryPaths(categoryTree, recipe.tags),
     })
-  }, [recipe, categoryTree, form])
+  }, [recipe, id, categoryTree, form])
 
   const handleBack = () => navigate('/recipe/list')
 

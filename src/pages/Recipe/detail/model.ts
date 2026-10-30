@@ -12,6 +12,7 @@ export interface RecipeIngredient {
 export interface RecipeTag {
   id: number
   name: string
+  /** 从一级到叶子的分类路径 */
   path_label?: string
 }
 
@@ -21,7 +22,9 @@ export interface RecipeDetail {
   title: string
   use_time: string | null
   difficulty: string | null
+  /** 做过人数 */
   person: number | null
+  /** 点赞数 */
   up: number | null
   pictures: string[] | null
   author_id: number | null
@@ -31,6 +34,7 @@ export interface RecipeDetail {
   ingredients: RecipeIngredient[] | null
   steps: RecipeStep[] | null
   star: number
+  /** 步骤图比例 */
   ratio: string | null
   tips: string | null
   /** 列表浏览桶；编辑回退用 */

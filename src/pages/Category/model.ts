@@ -21,6 +21,7 @@ export interface ManageListItem {
   id: string | number
   name: string
   kind: 'category' | 'sub_category' | 'tag'
+  /** 叶子分类的类型；一级、二级为空 */
   type: string | null
   icon: string | null
   /** 一级/二级为下级数量，标签为关联菜谱数 */
@@ -32,8 +33,11 @@ export interface ManageListResult {
   total: number
   page: number
   pageSize: number
+  /** 当前列表层级 */
   listKind: 'category' | 'sub_category' | 'tag'
+  /** 能否在当前节点下新增二级分类 */
   canAddSub: boolean
+  /** 能否在当前节点下新增叶子分类 */
   canAddTag: boolean
 }
 

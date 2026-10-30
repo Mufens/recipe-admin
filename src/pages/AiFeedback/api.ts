@@ -8,6 +8,7 @@ export interface LowSatisfactionParams {
   pageSize: number
 }
 
+/** 低满意问题榜 */
 export function fetchLowSatisfaction(
   params: LowSatisfactionParams,
   signal?: AbortSignal,
