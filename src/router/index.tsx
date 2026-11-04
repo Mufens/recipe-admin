@@ -1,12 +1,30 @@
 import { Suspense, type ComponentType, type LazyExoticComponent } from 'react'
+import { KeepAlive } from 'react-activation'
+import { Navigate, useLocation, useRoutes } from 'react-router-dom'
+import { Spin } from 'antd'
 import BasicLayout from '@/layouts/BasicLayout'
 import { useAdminProfile } from '@/hooks/usePermission'
 import LoginPage from '@/pages/Login'
 import LoginCallback from '@/pages/Login/callback'
 import ForbiddenPage from '@/pages/Forbidden'
 import NotFoundPage from '@/pages/NotFound'
-import { appRoutes } from '@/router/routes'
-import { Navigate, useRoutes } from 'react-router-dom'
+import { appRoutes, getTagScopedKey } from '@/router/routes'
+
+function PageLoading() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        minHeight: 160,
+      }}
+    >
+      <Spin size="large" />
+    </div>
+  )
+}
 
 function GuardedPage({
   code,
@@ -15,15 +33,25 @@ function GuardedPage({
   code?: string
   Page: LazyExoticComponent<ComponentType>
 }) {
+  const { pathname, search } = useLocation()
+  const cacheKey = getTagScopedKey(pathname, search)
   const { data, isPending } = useAdminProfile()
+
   if (code) {
-    if (!data) return isPending ? null : <ForbiddenPage />
+    if (!data) return isPending ? <PageLoading /> : <ForbiddenPage />
     if (!data.permissions.includes(code)) return <ForbiddenPage />
   }
+
   return (
-    <Suspense fallback={null}>
-      <Page />
-    </Suspense>
+    <KeepAlive
+      name={cacheKey}
+      cacheKey={cacheKey}
+      saveScrollPosition="screen"
+    >
+      <Suspense fallback={<PageLoading />}>
+        <Page />
+      </Suspense>
+    </KeepAlive>
   )
 }
 

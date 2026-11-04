@@ -32,11 +32,11 @@ function PhoneCell({ phone }: { phone: string | null | undefined }) {
 
 export default function UserList() {
   const pageRef = useRef<HTMLDivElement>(null)
+  const [form] = Form.useForm<{ keyword?: string }>()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [keyword, setKeyword] = useState('')
-  const [keywordInput, setKeywordInput] = useState('')
 
   const { data: listData, isFetching: loading, refetch } = useQuery({
     queryKey: ['users', keyword, page, pageSize],
@@ -45,18 +45,6 @@ export default function UserList() {
   })
   const data = listData?.items ?? []
   const total = listData?.total ?? 0
-
-  const handleSearch = () => {
-    setKeyword(keywordInput)
-    setPage(1)
-  }
-
-  const handleReset = () => {
-    setKeywordInput('')
-    setKeyword('')
-    setPage(1)
-    setPageSize(25)
-  }
 
   const handlePageChange = (p: number, ps: number) => {
     setPage(p)
@@ -165,22 +153,30 @@ export default function UserList() {
   return (
     <div ref={pageRef} className="user-page">
       <Form
+        form={form}
         className="user-page__search"
         layout="inline"
-        onFinish={handleSearch}
+        onFinish={(values) => {
+          setKeyword((values.keyword ?? '').trim())
+          setPage(1)
+        }}
+        onReset={() => {
+          form.resetFields()
+          setKeyword('')
+          setPage(1)
+          setPageSize(25)
+        }}
       >
-        <Form.Item label="关键词">
+        <Form.Item label="关键词" name="keyword">
           <Input
             allowClear
             placeholder="用户名 / 手机号 / ID"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
             style={{ width: 220 }}
           />
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button onClick={handleReset}>重置</Button>
+            <Button htmlType="reset">重置</Button>
             <Button type="primary" htmlType="submit">
               查询
             </Button>

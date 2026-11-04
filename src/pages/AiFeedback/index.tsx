@@ -18,14 +18,18 @@ function formatTime(val: string | null) {
   return d.isValid() ? d.format('YYYY-MM-DD HH:mm') : '-'
 }
 
+type FilterForm = {
+  keyword?: string
+  reason?: FeedbackReasonCode
+}
+
 export default function AiFeedbackPage() {
   const pageRef = useRef<HTMLDivElement>(null)
+  const [form] = Form.useForm<FilterForm>()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [keyword, setKeyword] = useState('')
-  const [keywordInput, setKeywordInput] = useState('')
   const [reason, setReason] = useState<'' | FeedbackReasonCode>('')
-  const [reasonInput, setReasonInput] = useState<'' | FeedbackReasonCode>('')
 
   const { data: listData, isFetching: loading, refetch } = useQuery({
     queryKey: ['ai-feedback', keyword, reason, page, pageSize],
@@ -34,21 +38,6 @@ export default function AiFeedbackPage() {
   })
   const data = listData?.items ?? []
   const total = listData?.total ?? 0
-
-  const handleSearch = () => {
-    setKeyword(keywordInput)
-    setReason(reasonInput)
-    setPage(1)
-  }
-
-  const handleReset = () => {
-    setKeywordInput('')
-    setKeyword('')
-    setReasonInput('')
-    setReason('')
-    setPage(1)
-    setPageSize(25)
-  }
 
   const columns: SmartColumn<LowSatisfactionItem>[] = useMemo(
     () => [
@@ -125,25 +114,33 @@ export default function AiFeedbackPage() {
   return (
     <div ref={pageRef} className="ai-feedback-page">
       <Form
+        form={form}
         className="ai-feedback-page__search"
         layout="inline"
-        onFinish={handleSearch}
+        onFinish={(values) => {
+          setKeyword((values.keyword ?? '').trim())
+          setReason(values.reason ?? '')
+          setPage(1)
+        }}
+        onReset={() => {
+          form.resetFields()
+          setKeyword('')
+          setReason('')
+          setPage(1)
+          setPageSize(25)
+        }}
       >
-        <Form.Item label="问题">
+        <Form.Item label="问题" name="keyword">
           <Input
             allowClear
             placeholder="问题关键词"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
             style={{ width: 220 }}
           />
         </Form.Item>
-        <Form.Item label="原因">
+        <Form.Item label="原因" name="reason">
           <Select
             allowClear
             placeholder="全部原因"
-            value={reasonInput || undefined}
-            onChange={(val) => setReasonInput(val || '')}
             options={FEEDBACK_REASONS.map((item) => ({
               value: item.code,
               label: item.label,
@@ -153,7 +150,7 @@ export default function AiFeedbackPage() {
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button onClick={handleReset}>重置</Button>
+            <Button htmlType="reset">重置</Button>
             <Button type="primary" htmlType="submit">
               查询
             </Button>

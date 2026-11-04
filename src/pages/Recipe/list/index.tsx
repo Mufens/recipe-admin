@@ -42,45 +42,72 @@ import RecipeLogModal from './components/RecipeLogModal'
 import './index.scss'
 import { type RecipeItem } from './model'
 
+type FilterForm = {
+  keyword?: string
+  ids?: string
+  category?: CategoryPaths
+  ingredients?: number[]
+  ingredientMode?: SearchMode
+  difficulty?: string
+  createTimeRange?: [Dayjs, Dayjs] | null
+}
+
+type ListQuery = {
+  keyword: string
+  ids: string
+  category: CategoryPaths
+  ingredients: number[]
+  ingredientMode: SearchMode
+  difficulty: string
+  createTimeFrom: string
+  createTimeTo: string
+}
+
+const EMPTY_QUERY: ListQuery = {
+  keyword: '',
+  ids: '',
+  category: [],
+  ingredients: [],
+  ingredientMode: 'exact',
+  difficulty: '',
+  createTimeFrom: '',
+  createTimeTo: '',
+}
+
+function toListQuery(values: FilterForm): ListQuery {
+  const range = values.createTimeRange
+  return {
+    keyword: (values.keyword ?? '').trim(),
+    ids: (values.ids ?? '').trim(),
+    category: values.category ?? [],
+    ingredients: values.ingredients ?? [],
+    ingredientMode: values.ingredientMode ?? 'exact',
+    difficulty: values.difficulty ?? '',
+    createTimeFrom: range?.[0]?.format('YYYY-MM-DD') || '',
+    createTimeTo: range?.[1]?.format('YYYY-MM-DD') || '',
+  }
+}
+
 export default function RecipeList() {
   const navigate = useNavigate()
   const location = useLocation()
   const pageRef = useRef<HTMLDivElement>(null)
+  const [form] = Form.useForm<FilterForm>()
 
   const [exporting, setExporting] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [logRecipe, setLogRecipe] = useState<RecipeItem | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(50)
-  const [keyword, setKeyword] = useState('')
-  const [keywordInput, setKeywordInput] = useState('')
+  const [pageSize, setPageSize] = useState(25)
+  const [query, setQuery] = useState<ListQuery>(EMPTY_QUERY)
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
-
-  const [idInput, setIdInput] = useState('')
-  const [searchIds, setSearchIds] = useState('')
-
-  const [selectedCategory, setSelectedCategory] = useState<CategoryPaths>([])
-  const [categoryInput, setCategoryInput] = useState<CategoryPaths>([])
-
-  const [searchIngredients, setSearchIngredients] = useState<number[]>([])
-  const [ingredientInput, setIngredientInput] = useState<number[]>([])
-  const [ingredientMode, setIngredientMode] = useState<SearchMode>('exact')
-  const [ingredientModeInput, setIngredientModeInput] =
-    useState<SearchMode>('exact')
-  const [difficulty, setDifficulty] = useState('')
-  const [difficultyInput, setDifficultyInput] = useState('')
-  const [createTimeFrom, setCreateTimeFrom] = useState('')
-  const [createTimeTo, setCreateTimeTo] = useState('')
-  const [createTimeRangeInput, setCreateTimeRangeInput] = useState<
-    [Dayjs, Dayjs] | null
-  >(null)
   const [fetchNonce, setFetchNonce] = useState(0)
 
   const { data: categoryTree = [] } = useCategoryTree()
   const selectedTagIds = useMemo(
-    () => extractLeafTagIds(categoryTree, selectedCategory),
-    [categoryTree, selectedCategory],
+    () => extractLeafTagIds(categoryTree, query.category),
+    [categoryTree, query.category],
   )
   const { data: ingredientOptions = [] } = useQuery({
     queryKey: ['ingredientNames'],
@@ -88,7 +115,7 @@ export default function RecipeList() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // 分类管理「关联菜谱」跳转：分类树就绪后回填筛选。
+  // 分类管理「关联菜谱」跳转：分类树就绪后回填筛选
   const filterTagId = (location.state as { filterTagId?: number } | null)
     ?.filterTagId
   const tagFilterPath = useMemo(
@@ -101,13 +128,12 @@ export default function RecipeList() {
     if (!tagFilterPath || appliedLocationKeyRef.current === location.key) return
 
     appliedLocationKeyRef.current = location.key
-    setCategoryInput([tagFilterPath])
-    setSelectedCategory([tagFilterPath])
+    form.setFieldsValue({ category: [tagFilterPath] })
+    setQuery({ ...EMPTY_QUERY, category: [tagFilterPath] })
     setSelectedRowKeys([])
     setPage(1)
-  }, [location.key, tagFilterPath])
+  }, [location.key, tagFilterPath, form])
 
-  // 有 filterTagId 时，等分类树解析完毕再发起列表查询，避免空筛选的无效请求
   const filterResolved = filterTagId == null || tagFilterPath !== null
 
   const {
@@ -115,33 +141,20 @@ export default function RecipeList() {
     isFetching: loading,
     refetch,
   } = useQuery({
-    queryKey: [
-      'recipes',
-      keyword,
-      page,
-      pageSize,
-      selectedTagIds,
-      searchIds,
-      searchIngredients,
-      ingredientMode,
-      difficulty,
-      createTimeFrom,
-      createTimeTo,
-      fetchNonce,
-    ],
+    queryKey: ['recipes', query, page, pageSize, selectedTagIds, fetchNonce],
     queryFn: ({ signal }) =>
       fetchRecipeList(
         {
-          keyword,
+          keyword: query.keyword,
           page,
           pageSize,
           tagIds: selectedTagIds,
-          ids: searchIds,
-          ingredients: searchIngredients,
-          ingredientMode,
-          difficulty,
-          createTimeFrom,
-          createTimeTo,
+          ids: query.ids,
+          ingredients: query.ingredients,
+          ingredientMode: query.ingredientMode,
+          difficulty: query.difficulty,
+          createTimeFrom: query.createTimeFrom,
+          createTimeTo: query.createTimeTo,
         },
         signal,
       ),
@@ -151,37 +164,11 @@ export default function RecipeList() {
   const data = listData?.items ?? []
   const total = listData?.total ?? 0
 
-  const handleSearch = () => {
-    setSelectedRowKeys([])
-    setKeyword(keywordInput)
-    setSelectedCategory(categoryInput)
-    setSearchIds(idInput)
-    setSearchIngredients(ingredientInput)
-    setIngredientMode(ingredientModeInput)
-    setDifficulty(difficultyInput)
-    setCreateTimeFrom(createTimeRangeInput?.[0]?.format('YYYY-MM-DD') || '')
-    setCreateTimeTo(createTimeRangeInput?.[1]?.format('YYYY-MM-DD') || '')
-    setPage(1)
-  }
-
   const handleReset = () => {
-    setKeywordInput('')
-    setKeyword('')
-    setSelectedCategory([])
-    setCategoryInput([])
-    setIdInput('')
-    setSearchIds('')
-    setIngredientInput([])
-    setSearchIngredients([])
-    setIngredientMode('exact')
-    setIngredientModeInput('exact')
-    setDifficulty('')
-    setDifficultyInput('')
-    setCreateTimeFrom('')
-    setCreateTimeTo('')
-    setCreateTimeRangeInput(null)
+    form.resetFields()
+    setQuery(EMPTY_QUERY)
     setPage(1)
-    setPageSize(50)
+    setPageSize(25)
     setSelectedRowKeys([])
   }
 
@@ -192,22 +179,18 @@ export default function RecipeList() {
     setFetchNonce((n) => n + 1)
   })
 
-  const handleAdd = () => {
-    navigate('/recipe/add')
-  }
-
   const handleExport = async () => {
     setExporting(true)
     try {
       const blob = await exportRecipes({
-        keyword,
+        keyword: query.keyword,
         ids: selectedRowKeys.map(String).join(','),
         tagIds: selectedTagIds,
-        ingredients: searchIngredients,
-        ingredientMode,
-        difficulty,
-        createTimeFrom,
-        createTimeTo,
+        ingredients: query.ingredients,
+        ingredientMode: query.ingredientMode,
+        difficulty: query.difficulty,
+        createTimeFrom: query.createTimeFrom,
+        createTimeTo: query.createTimeTo,
       })
       const url = URL.createObjectURL(blob)
       const a = Object.assign(document.createElement('a'), {
@@ -216,7 +199,7 @@ export default function RecipeList() {
       })
       a.click()
       URL.revokeObjectURL(url)
-    } catch(e) {
+    } catch (e) {
       console.error(e)
     } finally {
       setExporting(false)
@@ -287,6 +270,7 @@ export default function RecipeList() {
             height={60}
             style={{ objectFit: 'cover', borderRadius: 4 }}
             src={resolveMediaUrl(img)}
+            loading="lazy"
             {...imageProps}
           />
         ),
@@ -306,18 +290,11 @@ export default function RecipeList() {
         key: 'tags',
         dataIndex: 'tags',
         width: 280,
+        ellipsis: true,
         render: (_: unknown, record) => {
           const tags = record.tags ?? []
           if (!tags.length) return '-'
-          return (
-            <Space size={[4, 4]} wrap>
-              {tags.map((t) => (
-                <Tag key={t.id || t.name} color="purple">
-                  {t.path_label || t.name}
-                </Tag>
-              ))}
-            </Space>
-          )
+          return tags.map((t) => t.path_label || t.name).join('；')
         },
       },
       {
@@ -335,6 +312,7 @@ export default function RecipeList() {
                 style={{ borderRadius: '50%', objectFit: 'cover' }}
                 src={resolveMediaUrl(record.author_avatar)}
                 preview={false}
+                loading="lazy"
                 {...imageProps}
               />
             )}
@@ -379,73 +357,72 @@ export default function RecipeList() {
 
   const columns: SmartColumn<RecipeItem>[] = [...baseColumns]
   columns.push({
-      title: '操作',
-      key: 'action',
-      width: 200,
-      fixed: 'right',
-      render: (_: unknown, record) => (
-        <Space size={0}>
-          {permission('recipe_list_edit_btn') && (
-            <Button
-              type="link"
-              size="small"
-              onClick={() => navigate(`/recipe/edit?id=${record.id}`)}
-            >
-              编辑
+    title: '操作',
+    key: 'action',
+    width: 200,
+    fixed: 'right',
+    render: (_: unknown, record) => (
+      <Space size={0}>
+        {permission('recipe_list_edit_btn') && (
+          <Button
+            type="link"
+            size="small"
+            onClick={() => navigate(`/recipe/edit?id=${record.id}`)}
+          >
+            编辑
+          </Button>
+        )}
+        {permission('recipe_list_log_btn') && (
+          <Button type="link" size="small" onClick={() => setLogRecipe(record)}>
+            日志
+          </Button>
+        )}
+        {permission('recipe_list_delete_btn') && (
+          <Popconfirm
+            title="确认删除该菜谱？"
+            description="删除后不可恢复"
+            okText="删除"
+            okType="danger"
+            cancelText="取消"
+            onConfirm={() => void handleDelete([record.id])}
+          >
+            <Button type="link" danger size="small">
+              删除
             </Button>
-          )}
-          {permission('recipe_list_log_btn') && (
-            <Button type="link" size="small" onClick={() => setLogRecipe(record)}>
-              日志
-            </Button>
-          )}
-          {permission('recipe_list_delete_btn') && (
-            <Popconfirm
-              title="确认删除该菜谱？"
-              description="删除后不可恢复"
-              okText="删除"
-              okType="danger"
-              cancelText="取消"
-              onConfirm={() => void handleDelete([record.id])}
-            >
-              <Button type="link" danger size="small">
-                删除
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
-      ),
-    })
+          </Popconfirm>
+        )}
+      </Space>
+    ),
+  })
 
   return (
     <div ref={pageRef} className="home-page">
-      <QueryFilter  onFinish={handleSearch} onReset={handleReset}>
-        <Form.Item label="菜谱名称">
-          <Input
-            allowClear
-            placeholder="模糊搜索"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-          />
+      <QueryFilter
+        form={form}
+        initialValues={{
+          keyword: '',
+          ids: '',
+          ingredientMode: 'exact',
+        }}
+        onFinish={(values) => {
+          setQuery(toListQuery(values as FilterForm))
+          setSelectedRowKeys([])
+          setPage(1)
+        }}
+        onReset={handleReset}
+      >
+        <Form.Item label="菜谱名称" name="keyword">
+          <Input allowClear placeholder="模糊搜索" />
         </Form.Item>
-        <Form.Item label="编号">
-          <Input
-            allowClear
-            placeholder="多个用,英文逗号分隔"
-            value={idInput}
-            onChange={(e) => setIdInput(e.target.value)}
-          />
+        <Form.Item label="编号" name="ids">
+          <Input allowClear placeholder="多个用,英文逗号分隔" />
         </Form.Item>
-        <Form.Item label="分类筛选">
+        <Form.Item label="分类筛选" name="category">
           <Cascader
             multiple
             maxTagCount="responsive"
             maxTagPlaceholder={(omitted) => `+${omitted.length}`}
             options={categoryTree}
-            value={categoryInput}
-            onChange={(val) => {
-              setCategoryInput(val ?? [])
-            }}
             allowClear
             changeOnSelect
             placeholder="请选择分类"
@@ -453,50 +430,42 @@ export default function RecipeList() {
         </Form.Item>
         <Form.Item label="食材筛选">
           <Space.Compact>
-            <Select
-              value={ingredientModeInput}
-              onChange={setIngredientModeInput}
-              options={[
-                { label: '精确', value: 'exact' },
-                { label: '模糊', value: 'fuzzy' },
-              ]}
-              style={{ width: 72 }}
-            />
-            <Select
-              mode="multiple"
-              maxTagCount="responsive"
-              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
-              options={ingredientOptions.map((item) => ({
-                value: item.id,
-                label: item.name,
-              }))}
-              value={ingredientInput}
-              onChange={(val) => setIngredientInput(val ?? [])}
-              allowClear
-              showSearch={{ optionFilterProp: 'label' }}
-              placeholder="请选择"
-            />
+            <Form.Item name="ingredientMode" noStyle>
+              <Select
+                options={[
+                  { label: '精确', value: 'exact' },
+                  { label: '模糊', value: 'fuzzy' },
+                ]}
+                style={{ width: 72 }}
+              />
+            </Form.Item>
+            <Form.Item name="ingredients" noStyle>
+              <Select
+                mode="multiple"
+                maxTagCount="responsive"
+                maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+                options={ingredientOptions.map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                }))}
+                allowClear
+                showSearch={{ optionFilterProp: 'label' }}
+                placeholder="请选择"
+              />
+            </Form.Item>
           </Space.Compact>
         </Form.Item>
-        <Form.Item label="难度">
+        <Form.Item label="难度" name="difficulty">
           <Select
             allowClear
             showSearch={{ optionFilterProp: 'label' }}
             placeholder="请选择"
             options={difficultyOptions}
-            value={difficultyInput}
-            onChange={(val) => setDifficultyInput(val)}
           />
         </Form.Item>
-        <Form.Item label="创建时间">
+        <Form.Item label="创建时间" name="createTimeRange">
           <DatePicker.RangePicker
             allowClear
-            value={createTimeRangeInput}
-            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
-              setCreateTimeRangeInput(
-                dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null,
-              )
-            }}
             placeholder={['开始日期', '结束日期']}
           />
         </Form.Item>
@@ -510,13 +479,16 @@ export default function RecipeList() {
                 <Button
                   type="primary"
                   icon={<PlusCircleOutlined />}
-                  onClick={() => void handleAdd()}
+                  onClick={() => navigate('/recipe/add')}
                 >
                   新增
                 </Button>
               )}
               {permission('recipe_list_import_btn') && (
-                <Button icon={<ImportOutlined />} onClick={() => setImportOpen(true)}>
+                <Button
+                  icon={<ImportOutlined />}
+                  onClick={() => setImportOpen(true)}
+                >
                   批量导入
                 </Button>
               )}
@@ -553,7 +525,7 @@ export default function RecipeList() {
               current={page}
               pageSize={pageSize}
               total={total}
-              pageSizeOptions={['50', '100', '200', '500']}
+              pageSizeOptions={['25', '50', '100']}
               showSizeChanger
               showTotal={(t) => `共 ${t} 条`}
               onChange={(nextPage, nextSize) => {
@@ -563,6 +535,7 @@ export default function RecipeList() {
             />
           }
           rowKey="id"
+          virtual
           rowSelection={
             permission('recipe_list_delete_btn')
               ? {
@@ -576,7 +549,7 @@ export default function RecipeList() {
           dataSource={data}
           loading={loading}
           pagination={false}
-          scroll={{ x: 'max-content' }}
+          scroll={{ x: 1560 }}
         />
       </div>
 

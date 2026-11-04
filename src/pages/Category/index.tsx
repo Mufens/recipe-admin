@@ -1,4 +1,4 @@
-import { Button, Input, Pagination, Space } from 'antd'
+import { Button, Form, Input, Pagination, Space } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import SmartTable from '@/components/SmartTable'
 import { buildCategoryColumns } from './columns'
@@ -10,6 +10,7 @@ import './index.scss'
 export default function CategoryPage() {
   const navigate = useNavigate()
   const m = useCategoryManage()
+  const [filterForm] = Form.useForm<{ keyword?: string }>()
 
   const columns = buildCategoryColumns({
     listKind: m.listKind,
@@ -58,23 +59,29 @@ export default function CategoryPage() {
             </Space>
           </div>
 
-          <div className="category-page__search">
-            <span className="category-page__search-label">名称 / 编码</span>
-            <Input
-              allowClear
-              placeholder="模糊搜索"
-              value={m.keywordInput}
-              onChange={(e) => m.setKeywordInput(e.target.value)}
-              onPressEnter={m.handleSearch}
-              style={{ width: 200 }}
-            />
-            <Space>
-              <Button onClick={m.handleReset}>重置</Button>
-              <Button type="primary" onClick={m.handleSearch}>
-                查询
-              </Button>
-            </Space>
-          </div>
+          <Form
+            key={`${m.selected.kind}-${m.selected.id}`}
+            form={filterForm}
+            className="category-page__search"
+            layout="inline"
+            onFinish={(values) => m.handleSearch(values.keyword ?? '')}
+            onReset={() => {
+              filterForm.resetFields()
+              m.handleReset()
+            }}
+          >
+            <Form.Item label="名称 / 编码" name="keyword">
+              <Input allowClear placeholder="模糊搜索" style={{ width: 200 }} />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button htmlType="reset">重置</Button>
+                <Button type="primary" htmlType="submit">
+                  查询
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
         </div>
 
         <div className="category-page__table-panel">

@@ -1,5 +1,5 @@
 import { Button, Empty, Input, Spin, Tree, type TreeDataNode } from 'antd'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type Key } from 'react'
 import type { ManageNavNode, NodeKind, NodeSel } from '../model'
 
 type NavTreeNode = TreeDataNode & {
@@ -69,11 +69,10 @@ export default function CategoryNavTree({
   }, [nav, treeFilter])
 
   const filtering = !!treeFilter.trim()
-  const shownExpandedKeys = filtering
-    ? treeData
-        .filter((n) => Array.isArray(n.children) && n.children.length > 0)
-        .map((n) => String(n.key))
-    : expandedKeys
+  // 筛选时只展开有子节点的命中父级；非筛选沿用外部 expandedKeys
+  const filterExpandedKeys = treeData
+    .filter((n) => Array.isArray(n.children) && n.children.length > 0)
+    .map((n) => String(n.key))
 
   const selectedKeys =
     selected.kind && selected.id ? [selected.id] : []
@@ -110,10 +109,12 @@ export default function CategoryNavTree({
             blockNode
             treeData={treeData}
             selectedKeys={selectedKeys}
-            expandedKeys={shownExpandedKeys}
-            onExpand={(keys) => {
-              if (!filtering) onExpand(keys.map(String))
-            }}
+            {...(filtering
+              ? { expandedKeys: filterExpandedKeys, autoExpandParent: true }
+              : {
+                  expandedKeys,
+                  onExpand: (keys: Key[]) => onExpand(keys.map(String)),
+                })}
             onSelect={(keys, { node }) => {
               if (!keys.length) {
                 onSelect({ kind: '', id: '' })

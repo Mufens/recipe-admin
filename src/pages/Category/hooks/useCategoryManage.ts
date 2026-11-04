@@ -71,7 +71,6 @@ const SAVE_MSG: Record<NonNullable<ModalMode>['type'], string> = {
 export function useCategoryManage() {
   const [selected, setSelected] = useState<NodeSel>({ kind: '', id: '' })
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
-  const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
@@ -90,7 +89,6 @@ export function useCategoryManage() {
 
   const selectNode = (next: NodeSel) => {
     setSelected(next)
-    setKeywordInput('')
     setKeyword('')
     setPage(1)
     const expandId = expandKeyFor(nav, next)
@@ -241,14 +239,11 @@ export function useCategoryManage() {
     selectNode,
     expandedKeys,
     setExpandedKeys,
-    keywordInput,
-    setKeywordInput,
-    handleSearch: () => {
-      setKeyword(keywordInput)
+    handleSearch: (nextKeyword: string) => {
+      setKeyword(nextKeyword.trim())
       setPage(1)
     },
     handleReset: () => {
-      setKeywordInput('')
       setKeyword('')
       setPage(1)
       setPageSize(DEFAULT_PAGE_SIZE)

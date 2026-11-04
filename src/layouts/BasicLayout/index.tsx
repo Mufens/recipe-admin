@@ -14,8 +14,6 @@ const DEFAULT_AVATAR = 'https://images.ishidao.xin/cat/avatar.jpg'
 
 const { Header, Sider, Content } = Layout
 
-const systemPaths = ['/admin/accounts', '/admin/roles', '/admin/resources'] as const
-
 type SideItem = {
   key: string
   icon: ReactNode
@@ -24,73 +22,44 @@ type SideItem = {
 }
 
 const menuItems: SideItem[] = [
-  {
-    key: '/dashboard',
-    icon: <DashboardOutlined />,
-    label: '数据看板',
-  },
-  {
-    key: '/recipe/list',
-    icon: <UnorderedListOutlined />,
-    label: '菜谱列表',
-  },
-  {
-    key: '/categories',
-    icon: <AppstoreOutlined />,
-    label: '分类管理',
-  },
-  {
-    key: '/banners',
-    icon: <PictureOutlined />,
-    label: '首页轮播',
-  },
-  {
-    key: '/users',
-    icon: <TeamOutlined />,
-    label: '用户管理',
-  },
-  {
-    key: '/ai/feedback',
-    icon: <DislikeOutlined />,
-    label: '低满意问题榜',
-  },
+  { key: '/dashboard', icon: <DashboardOutlined />, label: '数据看板' },
+  { key: '/recipe/list', icon: <UnorderedListOutlined />, label: '菜谱列表' },
+  { key: '/categories', icon: <AppstoreOutlined />, label: '分类管理' },
+  { key: '/banners', icon: <PictureOutlined />, label: '首页轮播' },
+  { key: '/users', icon: <TeamOutlined />, label: '用户管理' },
+  { key: '/ai/feedback', icon: <DislikeOutlined />, label: '低满意问题榜' },
   {
     key: 'system',
     icon: <SettingOutlined />,
     label: '系统管理',
-    children: systemPaths.map((path) => ({
-      key: path,
-      label: routeMetaMap[path].title,
-    })),
+    children: [
+      { key: '/admin/accounts', label: '内部账号' },
+      { key: '/admin/roles', label: '角色管理' },
+      { key: '/admin/resources', label: '资源管理' },
+    ],
   },
 ]
 
 export default function BasicLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
+  const { pathname } = useLocation()
+  const { data } = useAdminProfile()
 
-  const { data: admin } = useAdminProfile()
-  const displayName = admin?.name || 'admin'
+  const selectedKey = routeMetaMap[pathname]?.active ?? pathname
+
   const items = useMemo(() => {
-    if (!admin) return menuItems
+    if (!data) return []
     const allow = (path: string) => {
       const code = routeMetaMap[path]?.permission
-      return !code || admin.permissions.includes(code)
+      return !code || data.permissions.includes(code)
     }
     return menuItems.flatMap((item) => {
       if (!item.children) return allow(item.key) ? [item] : []
-      const children = item.children.filter((child) => allow(child.key))
+      const children = item.children.filter((c) => allow(c.key))
       return children.length ? [{ ...item, children }] : []
     })
-  }, [admin])
-
-  const selectedKey = routeMetaMap[location.pathname]?.active ?? location.pathname
-  const [openKeys, setOpenKeys] = useState<string[]>([])
-  const menuOpenKeys =
-    (systemPaths as readonly string[]).includes(selectedKey) && !openKeys.includes('system')
-      ? [...openKeys, 'system']
-      : openKeys
+  }, [data])
 
   return (
     <Layout className="basic-layout">
@@ -110,13 +79,11 @@ export default function BasicLayout() {
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
+          defaultOpenKeys={['system']}
           items={items}
           onClick={({ key }) => {
             if (routeMetaMap[key]) navigate(key)
           }}
-          {...(collapsed
-            ? {}
-            : { openKeys: menuOpenKeys, onOpenChange: setOpenKeys })}
         />
       </Sider>
       <Layout>
@@ -155,8 +122,10 @@ export default function BasicLayout() {
               }}
             >
               <span className="basic-layout__user" role="button" tabIndex={0}>
-                <Avatar size={36} src={admin?.avatar || DEFAULT_AVATAR} />
-                <span className="basic-layout__user-name">{displayName}</span>
+                <Avatar size={36} src={data?.avatar || DEFAULT_AVATAR} />
+                <span className="basic-layout__user-name">
+                  {data?.name || ''}
+                </span>
                 <DownOutlined className="basic-layout__user-caret" />
               </span>
             </Dropdown>

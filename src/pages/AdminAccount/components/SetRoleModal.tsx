@@ -13,7 +13,7 @@ export default function SetRoleModal({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
-  const { data: profile } = useAdminProfile()
+  const { data } = useAdminProfile()
   const [roleState, setRoleState] = useState<{ accountId: number | null; roleIds: number[] }>({
     accountId: account?.id ?? null,
     roleIds: account?.roles.map((role) => role.id) ?? [],
@@ -39,7 +39,7 @@ export default function SetRoleModal({
       message.success('已保存')
       onClose()
       void queryClient.invalidateQueries({ queryKey: ['internal-accounts'] })
-      if (saved.id === profile?.id) {
+      if (saved.id === data?.id) {
         void queryClient.invalidateQueries({ queryKey: ['admin-profile'] })
       }
     },

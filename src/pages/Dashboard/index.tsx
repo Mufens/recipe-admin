@@ -79,16 +79,16 @@ function greetLabel() {
 }
 
 export default function DashboardPage() {
-  const { data: profile } = useAdminProfile()
-  const adminName = profile?.name || '管理员'
-  const { data, isLoading } = useQuery({
+  const { data } = useAdminProfile()
+  const adminName = data?.name || '管理员'
+  const { data: overview, isLoading } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: ({ signal }) => fetchOverview(signal),
   })
-  const stats = data?.stats ?? []
-  const aiTrend = data?.aiTrend ?? []
-  const hotRecipes = data?.hotRecipes ?? []
-  const recentFeedback = data?.recentFeedback ?? []
+  const stats = overview?.stats ?? []
+  const aiTrend = overview?.aiTrend ?? []
+  const hotRecipes = overview?.hotRecipes ?? []
+  const recentFeedback = overview?.recentFeedback ?? []
 
   const hotColumns = useMemo(
     () => [
