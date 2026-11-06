@@ -67,19 +67,10 @@
   &__crumb {
     min-height: 22px;
     margin-bottom: 15px;
-    color: var(--ant-color-text-tertiary);
     font-size: 13px;
 
-    button {
-      padding: 0;
-      height: auto;
-      color: var(--ant-color-text-secondary);
-    }
-
-    button.is-active {
-      color: var(--ant-color-text);
-      font-weight: 600;
-      cursor: default;
+    .ant-breadcrumb {
+      font-size: inherit;
     }
   }
 
@@ -89,12 +80,6 @@
     align-items: center;
     gap: 8px 12px;
     margin-bottom: 12px;
-  }
-
-  &__search-label {
-    color: var(--ant-color-text);
-    font-size: 14px;
-    white-space: nowrap;
   }
 
   &__table-panel {

@@ -18,6 +18,7 @@ import {
   Select,
   Space,
   Tag,
+  Tooltip,
   message,
 } from 'antd'
 import type { Dayjs } from 'dayjs'
@@ -247,6 +248,7 @@ export default function RecipeList() {
         key: 'id',
         dataIndex: 'id',
         width: 80,
+        align: 'center',
         fixed: 'left',
         render: (id: number) => (
           <Link
@@ -280,9 +282,12 @@ export default function RecipeList() {
         key: 'title',
         dataIndex: 'title',
         width: 200,
-        ellipsis: true,
+        align: 'center',
+        ellipsis: { showTitle: false },
         render: (title: string) => (
-          <span style={{ fontWeight: 500 }}>{title}</span>
+          <Tooltip title={title}>
+            <span style={{ fontWeight: 500 }}>{title}</span>
+          </Tooltip>
         ),
       },
       {
@@ -290,11 +295,17 @@ export default function RecipeList() {
         key: 'tags',
         dataIndex: 'tags',
         width: 280,
-        ellipsis: true,
+        align: 'center',
+        ellipsis: { showTitle: false },
         render: (_: unknown, record) => {
           const tags = record.tags ?? []
           if (!tags.length) return '-'
-          return tags.map((t) => t.path_label || t.name).join('；')
+          const label = tags.map((t) => t.path_label || t.name).join('；')
+          return (
+            <Tooltip title={label}>
+              <span>{label}</span>
+            </Tooltip>
+          )
         },
       },
       {
@@ -302,22 +313,32 @@ export default function RecipeList() {
         key: 'author_name',
         dataIndex: 'author_name',
         width: 170,
-        ellipsis: true,
+        align: 'center',
+        ellipsis: { showTitle: false },
         render: (name: string, record) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {resolveMediaUrl(record.author_avatar) && (
-              <Image
-                width={24}
-                height={24}
-                style={{ borderRadius: '50%', objectFit: 'cover' }}
-                src={resolveMediaUrl(record.author_avatar)}
-                preview={false}
-                loading="lazy"
-                {...imageProps}
-              />
-            )}
-            <span>{name}</span>
-          </div>
+          <Tooltip title={name}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              {resolveMediaUrl(record.author_avatar) && (
+                <Image
+                  width={24}
+                  height={24}
+                  style={{ borderRadius: '50%', objectFit: 'cover' }}
+                  src={resolveMediaUrl(record.author_avatar)}
+                  preview={false}
+                  loading="lazy"
+                  {...imageProps}
+                />
+              )}
+              <span>{name}</span>
+            </div>
+          </Tooltip>
         ),
       },
       {
@@ -325,6 +346,7 @@ export default function RecipeList() {
         key: 'difficulty',
         dataIndex: 'difficulty',
         width: 100,
+        align: 'center',
         render: (val: string | null) => {
           if (!val) return '-'
           return <Tag color={difficultyColor(val)}>{val}</Tag>
@@ -335,6 +357,7 @@ export default function RecipeList() {
         key: 'use_time',
         dataIndex: 'use_time',
         width: 100,
+        align: 'center',
         render: (val: string | null) => val || '-',
       },
       {
@@ -342,6 +365,7 @@ export default function RecipeList() {
         key: 'star',
         dataIndex: 'star',
         width: 100,
+        align: 'center',
         sorter: (a, b) => a.star - b.star,
       },
       {
@@ -349,6 +373,7 @@ export default function RecipeList() {
         key: 'create_time',
         dataIndex: 'create_time',
         width: 180,
+        align: 'center',
         render: (val: string | null) => val || '-',
       },
     ],
@@ -360,6 +385,7 @@ export default function RecipeList() {
     title: '操作',
     key: 'action',
     width: 200,
+    align: 'center',
     fixed: 'right',
     render: (_: unknown, record) => (
       <Space size={0}>

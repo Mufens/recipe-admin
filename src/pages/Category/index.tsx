@@ -1,4 +1,4 @@
-import { Button, Form, Input, Pagination, Space } from 'antd'
+import { Breadcrumb, Button, Form, Input, Pagination, Space } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import SmartTable from '@/components/SmartTable'
 import { buildCategoryColumns } from './columns'
@@ -10,7 +10,6 @@ import './index.scss'
 export default function CategoryPage() {
   const navigate = useNavigate()
   const m = useCategoryManage()
-  const [filterForm] = Form.useForm<{ keyword?: string }>()
 
   const columns = buildCategoryColumns({
     listKind: m.listKind,
@@ -36,42 +35,39 @@ export default function CategoryPage() {
       <section className="category-page__main">
         <div className="category-page__main-head">
           <div className="category-page__crumb">
-            <Space size={4} separator={<span>/</span>}>
-              {m.breadcrumb.map((b, idx) => {
+            <Breadcrumb
+              items={m.breadcrumb.map((b, idx) => {
                 const active = idx === m.breadcrumb.length - 1
-                return (
-                  <Button
-                    key={`${b.kind}-${b.id || 'root'}-${idx}`}
-                    type="link"
-                    className={active ? 'is-active' : undefined}
-                    onClick={() => {
-                      if (active) return
-                      m.selectNode({
-                        kind: b.kind,
-                        id: b.kind ? b.id : '',
-                      })
-                    }}
-                  >
-                    {b.name}
-                  </Button>
-                )
+                return {
+                  key: `${b.kind}-${b.id || 'root'}-${idx}`,
+                  title: b.name,
+                  href: active ? undefined : '#',
+                  onClick: active
+                    ? undefined
+                    : (event) => {
+                        event.preventDefault()
+                        m.selectNode({
+                          kind: b.kind,
+                          id: b.kind ? b.id : '',
+                        })
+                      },
+                }
               })}
-            </Space>
+            />
           </div>
 
           <Form
-            key={`${m.selected.kind}-${m.selected.id}`}
-            form={filterForm}
+            form={m.filterForm}
             className="category-page__search"
             layout="inline"
-            onFinish={(values) => m.handleSearch(values.keyword ?? '')}
-            onReset={() => {
-              filterForm.resetFields()
-              m.handleReset()
-            }}
+            onFinish={(values) => m.handleSearch(values)}
+            onReset={() => m.handleReset()}
           >
-            <Form.Item label="名称 / 编码" name="keyword">
-              <Input allowClear placeholder="模糊搜索" style={{ width: 200 }} />
+            <Form.Item label="分类名称" name="categoryName">
+              <Input allowClear placeholder="请输入" style={{ width: 160 }} />
+            </Form.Item>
+            <Form.Item label="分类编码" name="categoryCode">
+              <Input allowClear placeholder="请输入" style={{ width: 140 }} />
             </Form.Item>
             <Form.Item>
               <Space>
@@ -129,10 +125,9 @@ export default function CategoryPage() {
 
       <CategoryFormModal
         modal={m.modal}
-        form={m.form}
         confirmLoading={m.savePending}
         onCancel={() => m.setModal(null)}
-        onOk={() => void m.handleModalOk()}
+        onSubmit={(values) => void m.handleModalOk(values)}
       />
     </div>
   )

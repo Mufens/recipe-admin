@@ -58,7 +58,7 @@ export function buildCategoryColumns({
       width: 180,
       ellipsis: true,
       render: (name: string, row) => {
-        if (row.kind === 'tag') return <span>{name}</span>
+        if (row.kind === 'tag') return name
         const kind = row.kind
         return (
           <Button
@@ -93,45 +93,48 @@ export function buildCategoryColumns({
         )
       },
     },
-    {
+  )
+
+  if (listKind === 'tag') {
+    cols.push({
       title: '备注/类型',
       key: 'type',
       dataIndex: 'type',
       width: 120,
       ellipsis: true,
       render: (v: string | null) => v || '-',
-    },
-  )
+    })
+  }
 
   cols.push({
-      title: '操作',
-      key: 'action',
-      width: 180,
-      fixed: 'right',
-      render: (_: unknown, row) => (
-        <Space size={0}>
-          {permission('category_edit_btn') && (
-            <Button type="link" size="small" onClick={() => openRename(row)}>
-              修改
+    title: '操作',
+    key: 'action',
+    width: 180,
+    fixed: 'right',
+    render: (_: unknown, row) => (
+      <Space size={0}>
+        {permission('category_edit_btn') && (
+          <Button type="link" size="small" onClick={() => openRename(row)}>
+            修改
+          </Button>
+        )}
+        {permission('category_delete_btn') && row.kind === 'tag' && (
+          <Popconfirm
+            title="确认删掉这个标签？"
+            description="有菜谱在用时会拦下来"
+            okText="删除"
+            okType="danger"
+            cancelText="取消"
+            onConfirm={() => onDeleteTag(Number(row.id))}
+          >
+            <Button type="link" size="small" danger>
+              删除
             </Button>
-          )}
-          {permission('category_delete_btn') && row.kind === 'tag' && (
-            <Popconfirm
-              title="确认删掉这个标签？"
-              description="有菜谱在用时会拦下来"
-              okText="删除"
-              okType="danger"
-              cancelText="取消"
-              onConfirm={() => onDeleteTag(Number(row.id))}
-            >
-              <Button type="link" size="small" danger>
-                删除
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
-      ),
-    })
+          </Popconfirm>
+        )}
+      </Space>
+    ),
+  })
 
   return cols
 }

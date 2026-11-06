@@ -54,15 +54,15 @@ export default function CategoryNavTree({
       const selfHit = match(cat.name, cat.id)
       if (!selfHit && children.length === 0 && kw) return []
 
-      const hasSubs = subs.length > 0
+      const showChildren = children.length > 0
       return [
         {
           key: cat.id,
           title: cat.name,
           kind: 'category',
           id: cat.id,
-          children: hasSubs ? children : undefined,
-          isLeaf: !hasSubs,
+          children: showChildren ? children : undefined,
+          isLeaf: !showChildren,
         },
       ]
     })

@@ -1,5 +1,5 @@
 import { Form, message } from 'antd'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   keepPreviousData,
   useMutation,
@@ -71,11 +71,15 @@ const SAVE_MSG: Record<NonNullable<ModalMode>['type'], string> = {
 export function useCategoryManage() {
   const [selected, setSelected] = useState<NodeSel>({ kind: '', id: '' })
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
-  const [keyword, setKeyword] = useState('')
+  const [name, setName] = useState('')
+  const [code, setCode] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [modal, setModal] = useState<ModalMode>(null)
-  const [form] = Form.useForm<CategoryFormValues>()
+  const [filterForm] = Form.useForm<{
+    categoryName?: string
+    categoryCode?: string
+  }>()
 
   const {
     data: nav = [],
@@ -88,8 +92,10 @@ export function useCategoryManage() {
   })
 
   const selectNode = (next: NodeSel) => {
+    filterForm.resetFields()
     setSelected(next)
-    setKeyword('')
+    setName('')
+    setCode('')
     setPage(1)
     const expandId = expandKeyFor(nav, next)
     if (!expandId) return
@@ -101,7 +107,8 @@ export function useCategoryManage() {
   const listParams: ManageListParams = {
     nodeKind: selected.kind,
     nodeId: selected.id,
-    keyword,
+    name,
+    code,
     page,
     pageSize,
   }
@@ -204,25 +211,7 @@ export function useCategoryManage() {
     })
   }
 
-  // Modal destroyOnHidden 后 Form 才挂载，需等打开后再灌值
-  useEffect(() => {
-    if (!modal) return
-    if (modal.type === 'rename') {
-      const values: CategoryFormValues = { name: modal.row.name }
-      if (modal.kind === 'tag') {
-        values.type = modal.row.type || ''
-        values.icon = modal.row.icon || ''
-      }
-      form.setFieldsValue(values)
-    } else if (modal.type === 'createSub') {
-      form.setFieldsValue({ name: '', id: '' })
-    } else {
-      form.setFieldsValue({ name: '', type: '', icon: '' })
-    }
-  }, [modal, form])
-
-  const handleModalOk = async () => {
-    const values = await form.validateFields()
+  const handleModalOk = async (values: CategoryFormValues) => {
     if (!modal) return
     await saveMut.mutateAsync({
       mode: modal,
@@ -237,16 +226,19 @@ export function useCategoryManage() {
     refetchNav,
     selected,
     selectNode,
+    filterForm,
     expandedKeys,
     setExpandedKeys,
-    handleSearch: (nextKeyword: string) => {
-      setKeyword(nextKeyword.trim())
+    handleSearch: (values: { categoryName?: string; categoryCode?: string }) => {
+      setName((values.categoryName ?? '').trim())
+      setCode((values.categoryCode ?? '').trim())
       setPage(1)
     },
     handleReset: () => {
-      setKeyword('')
+      filterForm.resetFields()
+      setName('')
+      setCode('')
       setPage(1)
-      setPageSize(DEFAULT_PAGE_SIZE)
     },
     page,
     pageSize,
@@ -261,7 +253,6 @@ export function useCategoryManage() {
     canAddTag,
     modal,
     setModal,
-    form,
     savePending: saveMut.isPending,
     deleteTag: (id: number) => deleteMut.mutate(id),
     openRename,

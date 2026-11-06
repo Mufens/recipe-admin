@@ -44,7 +44,8 @@ export interface ManageListResult {
 export interface ManageListParams {
   nodeKind: NodeKind | ''
   nodeId: string
-  keyword: string
+  name: string
+  code: string
   page: number
   pageSize: number
 }

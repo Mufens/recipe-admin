@@ -23,7 +23,12 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ConfigProvider locale={zhCN} theme={theme}>
+      <ConfigProvider
+        locale={zhCN}
+        theme={theme}
+        input={{ autoComplete: 'off' }}
+        textArea={{ autoComplete: 'off' }}
+      >
         <BrowserRouter>
           <AliveScope>
             <AppRouter />

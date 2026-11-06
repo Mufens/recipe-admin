@@ -18,11 +18,23 @@
   &__cover-cell.ant-table-cell {
     line-height: 0;
     font-size: 0;
-    vertical-align: middle;
 
     .ant-image {
       display: block;
-      margin: 0 auto;
+    }
+  }
+
+  /* 虚拟表格单元格是 block，行高被封面撑开后文字贴在顶部 */
+  .ant-table-tbody-virtual .ant-table-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.ant-table-cell-ellipsis > * {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }
