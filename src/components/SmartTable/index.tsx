@@ -57,7 +57,7 @@ export default function SmartTable<T extends object>({
   const col = useColumnSetting<T>(normalizedColumns, opts?.storageKey)
 
   const resizable = hideChrome ? false : (opts?.resizable ?? true)
-  const displayColumns = useResizableColumns(
+  const { columns: displayColumns, scrollX } = useResizableColumns(
     col.displayColumns,
     resizable,
     wrapRef,
@@ -125,7 +125,7 @@ export default function SmartTable<T extends object>({
             {...tableProps}
             rowSelection={rowSelection}
             columns={displayColumns}
-            scroll={{ ...scroll, y: scrollY }}
+            scroll={{ ...scroll, ...(scrollX ? { x: scrollX } : {}), y: scrollY }}
           />
         </ConfigProvider>
       </div>

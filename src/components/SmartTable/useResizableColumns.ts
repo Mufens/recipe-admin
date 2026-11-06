@@ -33,26 +33,113 @@ function resolveWidth(width: ColumnType['width']): number | undefined {
   return undefined
 }
 
-/** 按列 key 写死宽，抵抗 antd 内容重测把宽度弹回 */
-function syncWidthStyles(root: HTMLElement, map: Record<string, number>) {
+const SELECTION_MIN = 32
+
+function lockRule(selector: string, px: string) {
+  return `${selector}{width:${px}!important;min-width:${px}!important;max-width:${px}!important;flex:0 0 ${px}!important;box-sizing:border-box!important}`
+}
+
+function paintTable(table: HTMLTableElement, widths: number[], extra = 0) {
+  const cols = [...table.querySelectorAll<HTMLElement>('col')]
+  widths.forEach((width, i) => {
+    if (cols[i]) cols[i].style.width = `${width}px`
+  })
+  const total = widths.reduce((sum, width) => sum + width, 0) + extra
+  if (!total) return
+  table.style.tableLayout = 'fixed'
+  table.style.width = `${total}px`
+  table.style.minWidth = `${total}px`
+}
+
+/**
+ * 固定表头时表头、表体是两张 table，列宽各看各的 col。
+ * 虚拟表体没有 table，列宽看 flex-basis。拖动时两边要写同一组宽度。
+ * 勾选列没写 width，重算时会被报成 0。
+ */
+function syncWidthStyles(
+  root: HTMLElement,
+  map: Record<string, number>,
+  selectionWidthRef: { current: number },
+) {
   const entries = Object.entries(map)
   let styleEl = root.querySelector<HTMLStyleElement>(`style[${STYLE_ATTR}]`)
   if (!entries.length) {
     styleEl?.remove()
-    return
+    return 0
   }
   if (!styleEl) {
     styleEl = document.createElement('style')
     styleEl.setAttribute(STYLE_ATTR, '')
     root.appendChild(styleEl)
   }
-  styleEl.textContent = entries
-    .map(([key, w]) => {
-      const px = `${w}px`
-      const sel = `[${COL_KEY_ATTR}="${CSS.escape(key)}"]`
-      return `${sel}{width:${px}!important;min-width:${px}!important;max-width:${px}!important;box-sizing:border-box!important}`
-    })
-    .join('')
+
+  const header = root.querySelector('.ant-table-header') ?? root
+  const ths = [...header.querySelectorAll<HTMLElement>('.ant-table-thead th')]
+  const cols = [...header.querySelectorAll<HTMLElement>('col')]
+  const widths: number[] = []
+  let scrollW = 0
+  ths.forEach((th, i) => {
+    if (th.classList.contains('ant-table-cell-scrollbar')) {
+      const styled = Number.parseFloat(cols[i]?.style.width ?? '')
+      scrollW = Number.isFinite(styled) && styled > 0
+        ? styled
+        : Math.round(th.getBoundingClientRect().width)
+      return
+    }
+    const key = th.getAttribute(COL_KEY_ATTR)
+    let width = key != null && map[key] != null
+      ? map[key]
+      : Number.parseFloat(cols[i]?.style.width ?? '')
+    if (key == null) {
+      if (width >= SELECTION_MIN) selectionWidthRef.current = width
+      else if (selectionWidthRef.current) width = selectionWidthRef.current
+    }
+    if (!Number.isFinite(width) || width <= 0) {
+      width = Math.round(th.getBoundingClientRect().width)
+    }
+    if (width <= 0) return
+    widths.push(width)
+  })
+
+  const headerTable = header.querySelector('table')
+  if (headerTable) paintTable(headerTable, widths, scrollW)
+  root.querySelectorAll<HTMLTableElement>('.ant-table-body table').forEach((table) => {
+    paintTable(table, widths)
+  })
+  const sum = widths.reduce((total, width) => total + width, 0)
+  root.querySelectorAll<HTMLElement>('.ant-table-tbody-virtual .ant-table-row').forEach((row) => {
+    row.style.width = `${sum}px`
+  })
+
+  const rules = entries.map(([key, w]) =>
+    lockRule(`[${COL_KEY_ATTR}="${CSS.escape(key)}"]`, `${w}px`),
+  )
+  const selectionPx = selectionWidthRef.current
+  if (selectionPx) {
+    const px = `${selectionPx}px`
+    rules.push(
+      `col.ant-table-selection-col{width:${px}!important}`,
+      lockRule('.ant-table-selection-column', px),
+    )
+  }
+  styleEl.textContent = rules.join('')
+  return sum
+}
+
+function sumScrollX<T extends object>(
+  columns: ColumnsType<T>,
+  map: Record<string, number>,
+  selectionWidth: number,
+) {
+  let sum = selectionWidth
+  for (const col of columns) {
+    if ('children' in col && col.children?.length) return undefined
+    const key = getColumnKey(col)
+    const width = (key && map[key]) || resolveWidth(col.width)
+    if (width == null) return undefined
+    sum += width
+  }
+  return sum
 }
 
 /**
@@ -65,14 +152,16 @@ export function useResizableColumns<T extends object>(
   wrapRef: RefObject<HTMLElement | null>,
 ) {
   const [widthMap, setWidthMap] = useState<Record<string, number>>({})
+  const [selectionWidth, setSelectionWidth] = useState(0)
   const widthMapRef = useRef(widthMap)
+  const selectionWidthRef = useRef(0)
   const dragRef = useRef<DragState | null>(null)
   const rafRef = useRef(0)
 
   useEffect(() => {
     widthMapRef.current = widthMap
     const root = wrapRef.current
-    if (root) syncWidthStyles(root, widthMap)
+    if (root) syncWidthStyles(root, widthMap, selectionWidthRef)
   }, [widthMap, wrapRef])
 
   useEffect(() => {
@@ -92,10 +181,11 @@ export function useResizableColumns<T extends object>(
         rafRef.current = 0
         const d = dragRef.current
         if (!d) return
-        syncWidthStyles(d.root, {
-          ...widthMapRef.current,
-          [d.key]: d.lastWidth,
-        })
+        syncWidthStyles(
+          d.root,
+          { ...widthMapRef.current, [d.key]: d.lastWidth },
+          selectionWidthRef,
+        )
       })
     }
 
@@ -107,7 +197,8 @@ export function useResizableColumns<T extends object>(
         rafRef.current = 0
       }
       const nextMap = { ...widthMapRef.current, [drag.key]: drag.lastWidth }
-      syncWidthStyles(drag.root, nextMap)
+      syncWidthStyles(drag.root, nextMap, selectionWidthRef)
+      setSelectionWidth(selectionWidthRef.current)
       setWidthMap(nextMap)
       dragRef.current = null
       document.body.classList.remove(RESIZING_CLS)
@@ -122,7 +213,15 @@ export function useResizableColumns<T extends object>(
     }
   }, [enabled])
 
-  return useMemo(() => {
+  const scrollX = useMemo(
+    () =>
+      Object.keys(widthMap).length
+        ? sumScrollX(columns, widthMap, selectionWidth)
+        : undefined,
+    [columns, widthMap, selectionWidth],
+  )
+
+  const resizedColumns = useMemo(() => {
     if (!enabled) return columns
     return columns.map((col) => {
       const key = getColumnKey(col)
@@ -180,4 +279,6 @@ export function useResizableColumns<T extends object>(
       }
     }) as ColumnsType<T>
   }, [columns, enabled, widthMap, wrapRef])
+
+  return { columns: resizedColumns, scrollX }
 }

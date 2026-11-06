@@ -24,7 +24,7 @@ export function buildCategoryColumns({
       title: '编码',
       key: 'id',
       dataIndex: 'id',
-      width: 120,
+      width: 80,
     },
   ]
 
@@ -55,7 +55,7 @@ export function buildCategoryColumns({
       title: '名称',
       key: 'name',
       dataIndex: 'name',
-      width: 180,
+      width: 120,
       ellipsis: true,
       render: (name: string, row) => {
         if (row.kind === 'tag') return name
@@ -74,7 +74,7 @@ export function buildCategoryColumns({
     {
       title: listKind === 'tag' ? '关联菜谱' : '下级数量',
       key: 'count',
-      width: 100,
+      width: 50,
       render: (_: unknown, row) => {
         const count = row.count ?? 0
         if (listKind !== 'tag' || count <= 0) return count
@@ -109,7 +109,7 @@ export function buildCategoryColumns({
   cols.push({
     title: '操作',
     key: 'action',
-    width: 180,
+    width: 60,
     fixed: 'right',
     render: (_: unknown, row) => (
       <Space size={0}>

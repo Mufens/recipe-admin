@@ -282,7 +282,7 @@ export default function RecipeList() {
         key: 'title',
         dataIndex: 'title',
         width: 200,
-        align: 'center',
+        align: 'left',
         ellipsis: { showTitle: false },
         render: (title: string) => (
           <Tooltip title={title}>
@@ -295,7 +295,7 @@ export default function RecipeList() {
         key: 'tags',
         dataIndex: 'tags',
         width: 280,
-        align: 'center',
+        align: 'left',
         ellipsis: { showTitle: false },
         render: (_: unknown, record) => {
           const tags = record.tags ?? []
@@ -313,7 +313,7 @@ export default function RecipeList() {
         key: 'author_name',
         dataIndex: 'author_name',
         width: 170,
-        align: 'center',
+        align: 'left',
         ellipsis: { showTitle: false },
         render: (name: string, record) => (
           <Tooltip title={name}>
@@ -321,7 +321,6 @@ export default function RecipeList() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
                 gap: 6,
               }}
             >
