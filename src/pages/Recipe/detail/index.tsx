@@ -37,7 +37,11 @@ function RecipeSteps({
     >
       <ol
         className="detail-page__steps"
-        style={{ '--step-aspect': ratio === '3/4' ? '3 / 4' : '16 / 9' }}
+        style={
+          {
+            '--step-aspect': ratio === '3/4' ? '3 / 4' : '16 / 9',
+          } as React.CSSProperties
+        }
       >
         {steps.map((step, index) => (
           <li key={index} className="detail-page__step">

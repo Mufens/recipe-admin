@@ -1,0 +1,88 @@
+name: recipe-admin正式部署
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: recipe-admin-prod
+  cancel-in-progress: false
+
+env:
+  HUSKY: "0"
+  IMAGE: ccr.ccs.tencentyun.com/food-serve/recipe-admin:master-${{ github.run_number }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装并构建
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: 构建并推送镜像
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          echo "$CCR_PASSWORD" | docker login ccr.ccs.tencentyun.com -u "$CCR_USERNAME" --password-stdin
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+        env:
+          CCR_USERNAME: ${{ secrets.CCR_USERNAME }}
+          CCR_PASSWORD: ${{ secrets.CCR_PASSWORD }}
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 部署到 food-serve 所在主机
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          port="${SSH_PORT:-22}"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/id"
+          chmod 600 "$HOME/.ssh/id"
+          ssh_opts="-i $HOME/.ssh/id -p $port -o StrictHostKeyChecking=accept-new"
+          ssh $ssh_opts "$SSH_USER@$SSH_HOST" bash -s <<EOF
+          set -euo pipefail
+          mkdir -p /www/wwwroot/default/recipe-admin
+          cd /www/wwwroot/default/recipe-admin
+          cat > docker-compose.yml <<'COMPOSE'
+          services:
+            recipe-admin:
+              image: \${RECIPE_ADMIN_IMAGE:?set RECIPE_ADMIN_IMAGE}
+              extra_hosts:
+                - "host.docker.internal:host-gateway"
+              ports:
+                - "127.0.0.1:5173:80"
+              restart: unless-stopped
+          COMPOSE
+          printf 'RECIPE_ADMIN_IMAGE=%s\n' "$IMAGE" > .env.tag
+          docker pull "$IMAGE"
+          if docker compose version >/dev/null 2>&1; then
+            docker compose --env-file .env.tag up -d
+          else
+            docker-compose --env-file .env.tag up -d
+          fi
+          EOF
