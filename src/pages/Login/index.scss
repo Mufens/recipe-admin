@@ -97,24 +97,4 @@
     color: var(--ant-color-text-secondary);
     font-size: 14px;
   }
-
-  &__icp {
-    position: absolute;
-    bottom: 16px;
-    left: 0;
-    z-index: 2;
-    width: 100%;
-    text-align: center;
-
-    a {
-      color: var(--ant-color-text-tertiary);
-      font-size: 12px;
-      line-height: 1;
-      text-decoration: none;
-
-      &:hover {
-        color: var(--ant-color-primary);
-      }
-    }
-  }
 }
