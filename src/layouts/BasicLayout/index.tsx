@@ -135,6 +135,11 @@ export default function BasicLayout() {
         <Content className="basic-layout__content">
           <Outlet />
         </Content>
+        <footer className="basic-layout__footer">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">
+            赣ICP备2025073908号-2
+          </a>
+        </footer>
       </Layout>
     </Layout>
   )

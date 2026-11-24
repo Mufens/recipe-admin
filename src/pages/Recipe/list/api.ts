@@ -45,6 +45,7 @@ export function fetchRecipeList(
 export function exportRecipes(params: ExportParams) {
   return request.post<Blob>('/api/detail/export', params, {
     responseType: 'blob',
+    timeout: 120000,
   })
 }
 

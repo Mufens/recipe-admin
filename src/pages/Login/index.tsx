@@ -203,6 +203,11 @@ export default function LoginPage() {
           </Form>
         )}
       </div>
+      <footer className="login-page__icp">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">
+          赣ICP备2025073908号-2
+        </a>
+      </footer>
     </div>
   )
 }
